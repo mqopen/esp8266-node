@@ -20,7 +20,7 @@ esp8266-firmware.elf: $(OBJS)
 	$(CC) $(CFLAGS) -c -o $@ $^
 
 flash: esp8266-firmware-0x00000.bin
-	esptool.py write_flash 0 esp8266-firmware-0x00000.bin 0x40000 esp8266-firmware-0x40000.bin
+	esptool.py write_flash 0 esp8266-firmware.elf-0x00000.bin 0x40000 esp8266-firmware.elf-0x40000.bin
 
 clean:
 	rm -f esp8266-firmware.elf *.d *.o *.bin
