@@ -2,7 +2,7 @@ CROSS := xtensa-lx106-elf-
 CC := $(CROSS)gcc
 LD := $(CROSS)gcc
 CFLAGS = -I. -mlongcalls
-LDLIBS = -nostdlib -Wl,--start-group -lmain -lnet80211 -lwpa -llwip -lpp -lphy -Wl,--end-group -lgcc
+LDLIBS = -nostdlib -Wl,--start-group -lmain -lnet80211 -lwpa -llwip -lpp -lphy  -Wl,--end-group -lgcc
 LDFLAGS = -Teagle.app.v6.ld
 
 CSRC = main.c uart.c gpio16.c
