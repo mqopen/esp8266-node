@@ -1,6 +1,9 @@
 #ifndef __USER_CONFIG_H__
 #define __USER_CONFIG_H__
 
+#define CONFIG_WIFI_SSID        "hostapd"
+#define CONFIG_WIFI_PASSWORD    "password"
+
 #define CONFIG_USE_DHCP     0
 #if ! CONFIG_USE_DHCP
 #define CONFIG_CLIENT_IP_ADDRESS0   192
@@ -15,7 +18,7 @@
 
 #define CONFIG_CLIENT_IP_GATEWAY0   192
 #define CONFIG_CLIENT_IP_GATEWAY1   168
-#define CONFIG_CLIENT_IP_GATEWAY2   0
+#define CONFIG_CLIENT_IP_GATEWAY2   10
 #define CONFIG_CLIENT_IP_GATEWAY3   1
 #endif
 

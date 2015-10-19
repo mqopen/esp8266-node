@@ -5,7 +5,7 @@ CFLAGS = -I. -mlongcalls
 LDLIBS = -nostdlib -Wl,--start-group -lmain -lnet80211 -lwpa -llwip -lpp -lphy  -Wl,--end-group -lgcc
 LDFLAGS = -Teagle.app.v6.ld
 
-CSRC = main.c uart.c gpio16.c
+CSRC = main.c uart.c gpio16.c network.c node.c
 OBJS = $(subst .c,.o,$(CSRC))
 
 all: esp8266-firmware.elf
