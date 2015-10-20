@@ -6,6 +6,7 @@
 #include <osapi.h>
 #include "user_config.h"
 #include "node.h"
+#include "mqttclient.h"
 #include "network.h"
 
 /**
@@ -41,9 +42,9 @@ static struct station_config station_config = {
 };
 
 /* Static function prototypes. */
+static void ICACHE_FLASH_ATTR _network_config_address(void);
+static void ICACHE_FLASH_ATTR _network_init_timer(void);
 static void ICACHE_FLASH_ATTR _network_create_connection(void);
-static void ICACHE_FLASH_ATTR _network_recv_callback(void *arg, char *pdata, unsigned short len);
-static void ICACHE_FLASH_ATTR _network_sent_callback(void *arg);
 static void ICACHE_FLASH_ATTR _network_connect_callback(void *arg);
 static void ICACHE_FLASH_ATTR _network_reconnect_callback(void *arg, sint8 err);
 static void ICACHE_FLASH_ATTR _network_disconnect_callback(void *arg);
@@ -52,6 +53,11 @@ static void ICACHE_FLASH_ATTR _network_write_finish_fn(void *arg);
 /* Implementation. */
 
 void ICACHE_FLASH_ATTR network_init(void) {
+    _network_config_address();
+    _network_init_timer();
+}
+
+static void ICACHE_FLASH_ATTR _network_config_address(void) {
 #if CONFIG_USE_DHCP
 #error "Not implemented yet"
 #else
@@ -70,7 +76,9 @@ void ICACHE_FLASH_ATTR network_init(void) {
                                 CONFIG_CLIENT_IP_NETMASK3);
     wifi_set_ip_info(STATION_IF, &ip_info);
 #endif
+}
 
+static void ICACHE_FLASH_ATTR _network_init_timer(void) {
     /* IP address timer. */
     os_timer_disarm(&network_timer);
     os_timer_setfn(&network_timer, (os_timer_func_t *)network_check_ip, NULL);
@@ -120,15 +128,9 @@ static void ICACHE_FLASH_ATTR _network_create_connection(void) {
     espconn_connect(&user_espconn);
 }
 
-static void ICACHE_FLASH_ATTR _network_recv_callback(void *arg, char *pdata, unsigned short len) {
-}
-
-static void ICACHE_FLASH_ATTR _network_sent_callback(void *arg) {
-}
-
 static void ICACHE_FLASH_ATTR _network_connect_callback(void *arg) {
-    espconn_regist_sentcb(&user_espconn, _network_sent_callback);
-    espconn_regist_recvcb(&user_espconn, _network_recv_callback);
+    espconn_regist_sentcb(&user_espconn, mqttclient_data_sent);
+    espconn_regist_recvcb(&user_espconn, mqttclient_data_received);
     node_update_state(NODE_STATE_OPERATIONAL);
     system_os_post(CONFIG_SEND_TASK_PRIORITY, 0, 0 );
 }

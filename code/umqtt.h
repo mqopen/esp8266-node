@@ -1,16 +1,16 @@
 /*
  * This file is part of umqtt.
- * 
+ *
  * umqtt is free softare: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Softare Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Foobar is distributed in the hope that it ill be useful,
  * but WITHOUT ANY WARRANTY; ithout even the implied arranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License                                     along ith Foobar.  If not, see <http://.gnu.org/licenses/
  * */
 
@@ -28,19 +28,27 @@
 #define umqtt_circ_is_empty(buff) \
     (umqtt_circ_datalen() == 0)
 
+/**
+ * MQTT packet type.
+ */
 enum umqtt_packet_type {
-    UMQTT_CONNECT       = 1,
-    UMQTT_CONNACK       = 2,
-    UMQTT_PUBLISH       = 3,
-    UMQTT_SUBSCRIBE     = 8,
-    UMQTT_SUBACK        = 9,
-    UMQTT_UNSUBSCRIBE   = 10,
-    UMQTT_UNSUBACK      = 11,
-    UMQTT_PINGREQ       = 12,
-    UMQTT_PINGRESP      = 13,
-    UMQTT_DISCONNECT    = 14,
+    UMQTT_CONNECT       = 1,        /**< CONNECT */
+    UMQTT_CONNACK       = 2,        /**< CONNACK */
+    UMQTT_PUBLISH       = 3,        /**< PUBLISH */
+    UMQTT_SUBSCRIBE     = 8,        /**< SUBSCRIBE */
+    UMQTT_SUBACK        = 9,        /**< SUBACK */
+    UMQTT_UNSUBSCRIBE   = 10,       /**< UNSUBSCRIBE */
+    UMQTT_UNSUBACK      = 11,       /**< UNSUBACK */
+    UMQTT_PINGREQ       = 12,       /**< PINGREQ */
+    UMQTT_PINGRESP      = 13,       /**< PINGRESP */
+    UMQTT_DISCONNECT    = 14,       /**< DISCONNECT */
 };
 
+/**
+ * MQTT client state.
+ *
+ * @todo needed?
+ */
 enum umqtt_client_state {
     UMQTT_STATE_INIT,
     UMQTT_STATE_CONNECTING,
@@ -48,6 +56,9 @@ enum umqtt_client_state {
     UMQTT_STATE_FAILED,
 };
 
+/**
+ * MQTT circular buffer.
+ */
 struct umqtt_circ_buffer {
     uint8_t *start;
     int16_t length;
@@ -57,6 +68,9 @@ struct umqtt_circ_buffer {
     int16_t datalen;
 };
 
+/**
+ * MQTT connection.
+ */
 struct umqtt_connection {
     struct umqtt_circ_buffer txbuff;
     struct umqtt_circ_buffer rxbuff;
@@ -74,6 +88,11 @@ struct umqtt_connection {
     enum umqtt_client_state state;
 };
 
+/**
+ * Initiate MQTT circulat buffer.
+ *
+ * @param buff
+ */
 void umqtt_circ_init(struct umqtt_circ_buffer *buff);
 
 /* Return the amount of bytes left */
@@ -89,4 +108,4 @@ void umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, in
 void umqtt_ping(struct umqtt_connection *conn);
 void umqtt_process(struct umqtt_connection *conn);
 
-#endif /* __UMQTT_H__ */
+#endif

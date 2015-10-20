@@ -32,6 +32,8 @@ enum mqttclient_state {
 void mqttclient_init(void);
 void mqttclient_notify_broker_unreachable(void);
 void mqttclient_process(void);
-void mqttclient_appcall(void);
+void ICACHE_FLASH_ATTR mqttclient_data_received(void *arg, char *pdata, unsigned short len);
+void ICACHE_FLASH_ATTR mqttclient_data_sent(void *arg);
+//void mqttclient_appcall(void);
 
 #endif

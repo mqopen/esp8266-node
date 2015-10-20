@@ -14,7 +14,6 @@
  */
 
 #include <string.h>
-
 #include "umqtt.h"
 
 #define umqtt_insert_messageid(conn, ptr)   \
