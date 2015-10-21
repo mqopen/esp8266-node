@@ -18,22 +18,33 @@
 #ifndef __MQTTCLIENT_H__
 #define __MQTTCLIENT_H__
 
+/**
+ * MQTT client module is responsible for establishing connection with a broker
+ * server, sending messages end receiving data.
+ */
+
+/**
+ * MQTT client state.
+ */
 enum mqttclient_state {
-    MQTTCLIENT_BROKER_DISCONNECTED,
-    MQTTCLIENT_BROKER_DISCONNECTED_WAIT,
-    MQTTCLIENT_BROKER_CONNECTING,
-    MQTTCLIENT_BROKER_CONNECTION_ESTABLISHED,
-    MQTTCLIENT_BROKER_DISCONNECTING,
+    MQTTCLIENT_BROKER_DISCONNECTED,             /**< Client is disconnected from broker server. */
+    MQTTCLIENT_BROKER_DISCONNECTED_WAIT,        /**< Client is disconnected from server and is waiting some to to next connection try. */
+    MQTTCLIENT_BROKER_CONNECTING,               /**< Client is connecting. */
+    MQTTCLIENT_BROKER_CONNECTION_ESTABLISHED,   /**< Connection sucessfully established. */
+    MQTTCLIENT_BROKER_DISCONNECTING,            /**< Client is disconnecting. */
 };
 
 /**
  * Initialize MQTT client.
  */
-void mqttclient_init(void);
-void mqttclient_notify_broker_unreachable(void);
-void mqttclient_process(void);
-void ICACHE_FLASH_ATTR mqttclient_data_received(void *arg, char *pdata, unsigned short len);
-void ICACHE_FLASH_ATTR mqttclient_data_sent(void *arg);
+void ICACHE_FLASH_ATTR mqttclient_init(void);
+
+/**
+ * Start MQTT client main logic.
+ */
+void ICACHE_FLASH_ATTR mqttclient_start(void);
+//void mqttclient_notify_broker_unreachable(void);
+//void mqttclient_process(void);
 //void mqttclient_appcall(void);
 
 #endif

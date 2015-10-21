@@ -22,6 +22,13 @@
 //#include "dht.h"
 //#include "sharedbuf.h"
 #include <os_type.h>
+#include <ip_addr.h>
+#include <espconn.h>
+#include <user_interface.h>
+//#include <gpio.h>
+#include <osapi.h>
+#include "user_config.h"
+#include "umqtt.h"
 #include "mqttclient.h"
 
 //#define send_buffer_length      sizeof(sharedbuf.mqtt.send_buffer)
@@ -32,84 +39,183 @@
 /**
  * MQTT client current state.
  */
-static enum mqttclient_state mqttclient_state;
+static ICACHE_FLASH_ATTR enum mqttclient_state mqttclient_state;
 
 /**
  * Timer for ending MQTT Keep Alive messages.
  */
-static os_timer_t keep_alive_timer;
+static ICACHE_FLASH_ATTR os_timer_t keep_alive_timer;
 
 /**
  * Timer for sending DHT measurements.
  */
-static os_timer_t  publish_timer;
+static ICACHE_FLASH_ATTR os_timer_t  publish_timer;
+
+/**
+ * Network timer.
+ */
+static ICACHE_FLASH_ATTR os_timer_t network_timer;
 
 /**
  * Timer for limit reconnect attempts.
  */
-static os_timer_t disconnected_wait_timer;
+//static os_timer_t disconnected_wait_timer;
 
-//static uint8_t *_mqttclient_send_buffer = sharedbuf.mqtt.send_buffer;
-static uint8_t _mqttclient_send_buffer[500];
+/**
+ * TCP connection.
+ */
+static ICACHE_FLASH_ATTR struct _esp_tcp _mqttclient_tcp;
 
-// TODO: make this variable uint16_t
-static int16_t _mqttclient_send_length;
-
-/* Static function prototypes. */
-static void _mqttclient_handle_connection_established();
-static void _mqttclient_broker_connect(void);
-static void _mqttclient_handle_disconnected_wait(void);
-static void _mqttclient_send_data(void);
-static void _mqttclient_mqtt_init(void);
-static void _mqttclient_umqtt_keep_alive(void);
-static void _umqttclient_handle_message(struct umqtt_connection __attribute__((unused)) *conn, char *topic, uint8_t *data, int len);
-
-/* MQTT connection structure instance. */
-struct umqtt_connection mqtt = {
-    .txbuff = {
-        .start = sharedbuf.mqtt.mqtt_tx,
-        .length = SHAREDBUF_NODE_UMQTT_TX_SIZE,
-    },
-    .rxbuff = {
-        .start = sharedbuf.mqtt.mqtt_rx,
-        .length = SHAREDBUF_NODE_UMQTT_RX_SIZE,
-    },
-    .message_callback = _umqttclient_handle_message,
-    .state = UMQTT_STATE_INIT
+/**
+ * Network connection.
+ */
+static ICACHE_FLASH_ATTR struct espconn _mqttclient_espconn = {
+    .proto.tcp = &_mqttclient_tcp,
 };
 
-void mqttclient_init(void) {
-    //os_timer_setfn(&network_timer, (os_timer_func_t *)network_check_ip, NULL);
+//static uint8_t *_mqttclient_send_buffer = sharedbuf.mqtt.send_buffer;
+static uint8_t _mqttclient_tx_buffer[200] ICACHE_FLASH_ATTR;
+static ICACHE_FLASH_ATTR uint8_t _mqttclient_rx_buffer[200];
 
-    os_timer_setfn(&keep_alive_timer, (os_timer_func_t *)_mqttclient_umqtt_keep_alive, NULL);
+// TODO: make this variable uint16_t
+static ICACHE_FLASH_ATTR int16_t _mqttclient_send_length;
 
+/* MQTT connection structure instance. */
+static ICACHE_FLASH_ATTR struct umqtt_connection _mqtt = {
+    .txbuff = {
+        .start = _mqttclient_tx_buffer,
+        .length = sizeof(_mqttclient_tx_buffer),
+    },
+    .rxbuff = {
+        .start = _mqttclient_tx_buffer,
+        .length = sizeof(_mqttclient_tx_buffer),
+    },
+//    .message_callback = _umqttclient_handle_message,
+//    .state = UMQTT_STATE_INIT,
+};
+
+/* Static function prototypes. */
+static void ICACHE_FLASH_ATTR _mqttclient_publish(void);
+//static void _mqttclient_handle_connection_established();
+//static void _mqttclient_broker_connect(void);
+//static void _mqttclient_handle_disconnected_wait(void);
+//static void _mqttclient_send_data(void);
+//static void _mqttclient_mqtt_init(void);
+static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void);
+//static void _umqttclient_handle_message(struct umqtt_connection __attribute__((unused)) *conn, char *topic, uint8_t *data, int len);
+
+/**
+ * Establish TCP connection with remote MQTT server.
+ */
+static void ICACHE_FLASH_ATTR _mqttclient_check_ip(void);
+static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void);
+static void ICACHE_FLASH_ATTR _mqttclient_connect_callback(void *arg);
+static void ICACHE_FLASH_ATTR _mqttclient_reconnect_callback(void *arg, sint8 err);
+static void ICACHE_FLASH_ATTR _mqttclient_disconnect_callback(void *arg);
+static void ICACHE_FLASH_ATTR _mqttclient_write_finish_fn(void *arg);
+static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, unsigned short len);
+static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg);
+
+void ICACHE_FLASH_ATTR mqttclient_init(void) {
+    os_timer_setfn(&keep_alive_timer, (os_timer_func_t *) _mqttclient_umqtt_keep_alive, NULL);
+    os_timer_setfn(&publish_timer, (os_timer_func_t *) _mqttclient_publish, NULL);
+}
+
+void ICACHE_FLASH_ATTR mqttclient_start(void) {
     os_timer_arm(&keep_alive_timer, CONFIG_MQTT_KEEP_ALIVE_INTERVAL_MS, 1);
-
-    //timer_set(&keep_alive_timer, CLOCK_SECOND * MQTT_KEEP_ALIVE / 2);
-    //timer_set(&dht_timer, CLOCK_SECOND * MQTT_PUBLISH_PERIOD);
-    //timer_set(&disconnected_wait_timer, CLOCK_SECOND);
+    os_timer_arm(&publish_timer, CONFIG_MQTT_PUBLISH_INTERVAL_MS, 1);
 }
 
-void mqttclient_notify_broker_unreachable(void) {
-    timer_restart(&disconnected_wait_timer);
-    update_state(MQTTCLIENT_BROKER_DISCONNECTED);
-}
-
-void mqttclient_process(void) {
-    switch (current_state) {
-        case MQTTCLIENT_BROKER_CONNECTION_ESTABLISHED:
-            _mqttclient_handle_connection_established();
-            break;
-        case MQTTCLIENT_BROKER_DISCONNECTED:
-            _mqttclient_broker_connect();
-            break;
-        case MQTTCLIENT_BROKER_DISCONNECTED_WAIT:
-            _mqttclient_handle_disconnected_wait();
-            break;
-        default:
-            break;
+static void ICACHE_FLASH_ATTR _mqttclient_check_ip(void) {
+    struct ip_info ipconfig;
+    os_timer_disarm(&network_timer);
+    wifi_get_ip_info(STATION_IF, &ipconfig);
+    if (wifi_station_get_connect_status() == STATION_GOT_IP && ipconfig.ip.addr != 0) {
+        char page_buffer[20];
+        os_sprintf(page_buffer,"IP: %d.%d.%d.%d\r\n",IP2STR(&ipconfig.ip));
+        uart0_tx_buffer(page_buffer,strlen(page_buffer));
+        _mqttclient_create_connection();
+    } else {
+        os_printf("No ip found\r\n");
+        os_timer_setfn(&network_timer, (os_timer_func_t *)_mqttclient_check_ip, NULL);
+        os_timer_arm(&network_timer, 1000, 0);
     }
 }
+
+static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
+    struct ip_addr ip;
+    _mqttclient_espconn.type = ESPCONN_TCP;
+    _mqttclient_espconn.state = ESPCONN_NONE;
+    _mqttclient_espconn.reverse = &_mqttclient_espconn;
+    _mqttclient_espconn.proto.tcp->local_port = espconn_port();
+    _mqttclient_espconn.proto.tcp->remote_port = CONFIG_MQTT_BROKER_IP_PORT;
+    IP4_ADDR(&ip, CONFIG_MQTT_BROKER_IP_ADDRESS0,
+                    CONFIG_MQTT_BROKER_IP_ADDRESS1,
+                    CONFIG_MQTT_BROKER_IP_ADDRESS2,
+                    CONFIG_MQTT_BROKER_IP_ADDRESS3);
+    // TODO: hardcoded IP address length literal
+    os_memcpy(_mqttclient_espconn.proto.tcp->remote_ip, &ip, 4);
+
+    espconn_regist_connectcb(&_mqttclient_espconn, _mqttclient_connect_callback);
+    espconn_regist_disconcb(&_mqttclient_espconn, _mqttclient_disconnect_callback);
+    espconn_regist_reconcb(&_mqttclient_espconn, _mqttclient_reconnect_callback);
+    espconn_regist_write_finish(&_mqttclient_espconn, _mqttclient_write_finish_fn);
+    espconn_connect(&_mqttclient_espconn);
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_connect_callback(void *arg) {
+    espconn_regist_sentcb(&_mqttclient_espconn, _mqttclient_data_sent);
+    espconn_regist_recvcb(&_mqttclient_espconn, _mqttclient_data_received);
+    system_os_post(CONFIG_SEND_TASK_PRIORITY, 0, 0 );
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_reconnect_callback(void *arg, sint8 err) {
+    espconn_connect(&_mqttclient_espconn);
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_disconnect_callback(void *arg) {
+    espconn_connect(&_mqttclient_espconn);
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_write_finish_fn(void *arg) {
+    os_printf("__ Finished __\r\n");
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, unsigned short len) {
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
+}
+
+
+
+
+/* **************************************************************************** */
+
+
+//void mqttclient_notify_broker_unreachable(void) {
+//    timer_restart(&disconnected_wait_timer);
+//    update_state(MQTTCLIENT_BROKER_DISCONNECTED);
+//}
+
+//void mqttclient_process(void) {
+//    switch (current_state) {
+//        case MQTTCLIENT_BROKER_CONNECTION_ESTABLISHED:
+//            _mqttclient_handle_connection_established();
+//            break;
+//        case MQTTCLIENT_BROKER_DISCONNECTED:
+//            _mqttclient_broker_connect();
+//            break;
+//        case MQTTCLIENT_BROKER_DISCONNECTED_WAIT:
+//            _mqttclient_handle_disconnected_wait();
+//            break;
+//        default:
+//            break;
+//    }
+//}
 
 //void mqttclient_appcall(void) {
 //    struct umqtt_connection *conn = uip_conn->appstate.conn;
@@ -144,86 +250,80 @@ void mqttclient_process(void) {
 //    }
 //}
 
-void ICACHE_FLASH_ATTR mqttclient_data_received(void *arg, char *pdata, unsigned short len) {
+//static void _mqttclient_handle_connection_established(void) {
+//    if (mqtt.state == UMQTT_STATE_CONNECTED) {
+//        if (timer_tryrestart(&keep_alive_timer))
+//            _mqttclient_umqtt_keep_alive(&mqtt);
+//        if (timer_tryrestart(&dht_timer))
+//            _mqttclient_send_data();
+//    } else if (mqtt.state == UMQTT_STATE_INIT) {
+//        _mqttclient_mqtt_init();
+//    }
+//}
+
+//static void _mqttclient_broker_connect(void) {
+//    struct uip_conn *uc;
+//    uip_ipaddr_t ip;
+//
+//    uip_ipaddr(&ip, MQTT_BROKER_IP_ADDR0, MQTT_BROKER_IP_ADDR1, MQTT_BROKER_IP_ADDR2, MQTT_BROKER_IP_ADDR3);
+//    uc = uip_connect(&ip, htons(MQTT_BROKER_PORT));
+//    if (uc == NULL) {
+//        return;
+//    }
+//    uc->appstate.conn = &mqtt;
+//    update_state(MQTTCLIENT_BROKER_CONNECTING);
+//}
+
+//static void _mqttclient_handle_disconnected_wait(void) {
+//    if (timer_tryrestart(&disconnected_wait_timer))
+//        _mqttclient_broker_connect();
+//}
+
+//static void _mqttclient_send_data(void) {
+//    enum dht_read_status status = dht_read();
+//    // TODO: remove hardcoded constant
+//    char buffer[20];
+//    uint8_t len = 0;
+//    switch (status) {
+//        case DHT_OK:
+//            // If status is OK, publish measured data and return from function.
+//            len = snprintf(buffer, sizeof(buffer), "%d.%d", dht_data.humidity / 10, dht_data.humidity % 10);
+//            umqtt_publish(&mqtt, MQTT_TOPIC_HUMIDITY, (uint8_t *) buffer, len);
+//            len = snprintf(buffer, sizeof(buffer), "%d.%d", dht_data.temperature / 10, dht_data.temperature % 10);
+//            umqtt_publish(&mqtt, MQTT_TOPIC_TEMPERATURE, (uint8_t *) buffer, len);
+//            return;
+//        case DHT_ERROR_CHECKSUM:
+//            len = snprintf(buffer, sizeof(buffer), "E_CHECKSUM");
+//            break;
+//        case DHT_ERROR_TIMEOUT:
+//            len = snprintf(buffer, sizeof(buffer), "E_TIMEOUT");
+//            break;
+//        case DHT_ERROR_CONNECT:
+//            len = snprintf(buffer, sizeof(buffer), "E_CONNECT");
+//            break;
+//        case DHT_ERROR_ACK_L:
+//            len = snprintf(buffer, sizeof(buffer), "E_ACK_L");
+//            break;
+//        case DHT_ERROR_ACK_H:
+//            len = snprintf(buffer, sizeof(buffer), "E_ACK_H");
+//            break;
+//    }
+//
+//    /* Publish error codes. */
+//    umqtt_publish(&mqtt, MQTT_TOPIC_HUMIDITY, (uint8_t *)buffer, len);
+//    umqtt_publish(&mqtt, MQTT_TOPIC_TEMPERATURE, (uint8_t *)buffer, len);
+//}
+
+//static void _mqttclient_mqtt_init(void) {
+//    umqtt_init(&mqtt);
+//    umqtt_circ_init(&mqtt.txbuff);
+//    umqtt_circ_init(&mqtt.rxbuff);
+//    umqtt_connect(&mqtt, MQTT_KEEP_ALIVE, MQTT_CLIENT_ID);
+//}
+
+static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
+    umqtt_ping(&_mqtt);
 }
 
-void ICACHE_FLASH_ATTR mqttclient_data_sent(void *arg) {
-}
-
-static void _mqttclient_handle_connection_established(void) {
-    if (mqtt.state == UMQTT_STATE_CONNECTED) {
-        if (timer_tryrestart(&keep_alive_timer))
-            _mqttclient_umqtt_keep_alive(&mqtt);
-        if (timer_tryrestart(&dht_timer))
-            _mqttclient_send_data();
-    } else if (mqtt.state == UMQTT_STATE_INIT) {
-        _mqttclient_mqtt_init();
-    }
-}
-
-static void _mqttclient_broker_connect(void) {
-    struct uip_conn *uc;
-    uip_ipaddr_t ip;
-
-    uip_ipaddr(&ip, MQTT_BROKER_IP_ADDR0, MQTT_BROKER_IP_ADDR1, MQTT_BROKER_IP_ADDR2, MQTT_BROKER_IP_ADDR3);
-    uc = uip_connect(&ip, htons(MQTT_BROKER_PORT));
-    if (uc == NULL) {
-        return;
-    }
-    uc->appstate.conn = &mqtt;
-    update_state(MQTTCLIENT_BROKER_CONNECTING);
-}
-
-static void _mqttclient_handle_disconnected_wait(void) {
-    if (timer_tryrestart(&disconnected_wait_timer))
-        _mqttclient_broker_connect();
-}
-
-static void _mqttclient_send_data(void) {
-    enum dht_read_status status = dht_read();
-    // TODO: remove hardcoded constant
-    char buffer[20];
-    uint8_t len = 0;
-    switch (status) {
-        case DHT_OK:
-            // If status is OK, publish measured data and return from function.
-            len = snprintf(buffer, sizeof(buffer), "%d.%d", dht_data.humidity / 10, dht_data.humidity % 10);
-            umqtt_publish(&mqtt, MQTT_TOPIC_HUMIDITY, (uint8_t *) buffer, len);
-            len = snprintf(buffer, sizeof(buffer), "%d.%d", dht_data.temperature / 10, dht_data.temperature % 10);
-            umqtt_publish(&mqtt, MQTT_TOPIC_TEMPERATURE, (uint8_t *) buffer, len);
-            return;
-        case DHT_ERROR_CHECKSUM:
-            len = snprintf(buffer, sizeof(buffer), "E_CHECKSUM");
-            break;
-        case DHT_ERROR_TIMEOUT:
-            len = snprintf(buffer, sizeof(buffer), "E_TIMEOUT");
-            break;
-        case DHT_ERROR_CONNECT:
-            len = snprintf(buffer, sizeof(buffer), "E_CONNECT");
-            break;
-        case DHT_ERROR_ACK_L:
-            len = snprintf(buffer, sizeof(buffer), "E_ACK_L");
-            break;
-        case DHT_ERROR_ACK_H:
-            len = snprintf(buffer, sizeof(buffer), "E_ACK_H");
-            break;
-    }
-
-    /* Publish error codes. */
-    umqtt_publish(&mqtt, MQTT_TOPIC_HUMIDITY, (uint8_t *)buffer, len);
-    umqtt_publish(&mqtt, MQTT_TOPIC_TEMPERATURE, (uint8_t *)buffer, len);
-}
-
-static void _mqttclient_mqtt_init(void) {
-    umqtt_init(&mqtt);
-    umqtt_circ_init(&mqtt.txbuff);
-    umqtt_circ_init(&mqtt.rxbuff);
-    umqtt_connect(&mqtt, MQTT_KEEP_ALIVE, MQTT_CLIENT_ID);
-}
-
-static void _mqttclient_umqtt_keep_alive(void) {
-    umqtt_ping(&mqtt);
-}
-
-static void _umqttclient_handle_message(struct umqtt_connection __attribute__((unused)) *conn, char *topic, uint8_t *data, int len) {
-}
+//static void _umqttclient_handle_message(struct umqtt_connection __attribute__((unused)) *conn, char *topic, uint8_t *data, int len) {
+//}

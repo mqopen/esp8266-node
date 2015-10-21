@@ -29,7 +29,7 @@
 #define umqtt_header_type(h) \
     ((h) >> 4)
 
-static int16_t umqtt_decode_length(uint8_t *data) {
+static int16_t ICACHE_FLASH_ATTR umqtt_decode_length(uint8_t *data) {
     int16_t mul = 1;
     int16_t val = 0;
     int16_t i;
@@ -41,7 +41,7 @@ static int16_t umqtt_decode_length(uint8_t *data) {
     return val;
 }
 
-static int16_t umqtt_encode_length(int16_t len, uint8_t *data) {
+static int16_t ICACHE_FLASH_ATTR umqtt_encode_length(int16_t len, uint8_t *data) {
     int16_t digit;
     int16_t i = 0;
 
@@ -56,12 +56,12 @@ static int16_t umqtt_encode_length(int16_t len, uint8_t *data) {
     return i; /* Return the amount of bytes used */
 }
 
-void umqtt_circ_init(struct umqtt_circ_buffer *buff) {
+void ICACHE_FLASH_ATTR umqtt_circ_init(struct umqtt_circ_buffer *buff) {
     buff->pointer = buff->start;
     buff->datalen = 0;
 }
 
-int16_t umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len) {
+int16_t ICACHE_FLASH_ATTR umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len) {
     uint8_t *bend = buff->start + buff->length - 1;
     /* This points to new byte */
     uint8_t *dend = (buff->pointer - buff->start + buff->datalen) % buff->length + buff->start;
@@ -79,7 +79,7 @@ int16_t umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t l
     return len; /* Return amount of bytes left */
 }
 
-int16_t umqtt_circ_peek(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len) {
+int16_t ICACHE_FLASH_ATTR umqtt_circ_peek(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len) {
     uint8_t *ptr = buff->pointer;
     uint8_t *bend = buff->start + buff->length - 1;
     int16_t i;
@@ -92,7 +92,7 @@ int16_t umqtt_circ_peek(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t l
     return i; /* Return the amount of bytes actually peeked */
 }
 
-int16_t umqtt_circ_pop(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len) {
+int16_t ICACHE_FLASH_ATTR umqtt_circ_pop(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len) {
     uint8_t *bend = buff->start + buff->length - 1;
     int16_t i;
 
@@ -106,7 +106,7 @@ int16_t umqtt_circ_pop(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t le
     return i; /* Return the amount of bytes actually popped */
 }
 
-void umqtt_init(struct umqtt_connection *conn) {
+void ICACHE_FLASH_ATTR umqtt_init(struct umqtt_connection *conn) {
     conn->state = UMQTT_STATE_INIT;
     conn->nack_ping = 0;
     conn->nack_publish = 0;
@@ -114,7 +114,7 @@ void umqtt_init(struct umqtt_connection *conn) {
     conn->message_id = 1; /* Id 0 is reserved */
 }
 
-void umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid) {
+void ICACHE_FLASH_ATTR umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid) {
     int16_t cidlen = strlen(cid);
     uint8_t fixed;
     uint8_t remlen[4];
@@ -148,7 +148,7 @@ void umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid) {
     conn->state = UMQTT_STATE_CONNECTING;
 }
 
-void umqtt_subscribe(struct umqtt_connection *conn, char *topic) {
+void ICACHE_FLASH_ATTR umqtt_subscribe(struct umqtt_connection *conn, char *topic) {
     int16_t topiclen = strlen(topic);
     uint8_t fixed;
     uint8_t remlen[4];
@@ -171,7 +171,7 @@ void umqtt_subscribe(struct umqtt_connection *conn, char *topic) {
     conn->nack_subscribe++;
 }
 
-void umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, int16_t datalen) {
+void ICACHE_FLASH_ATTR umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, int16_t datalen) {
     int16_t toplen = strlen(topic);
     uint8_t fixed;
     uint8_t remlen[4];
@@ -190,14 +190,14 @@ void umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, in
     umqtt_circ_push(&conn->txbuff, data, datalen);
 }
 
-void umqtt_ping(struct umqtt_connection *conn) {
+void ICACHE_FLASH_ATTR umqtt_ping(struct umqtt_connection *conn) {
     uint8_t packet[] = { umqtt_build_header(UMQTT_PINGREQ, 0, 0, 0), 0 };
 
     umqtt_circ_push(&conn->txbuff, packet, sizeof(packet));
     conn->nack_ping++;
 }
 
-static void umqtt_handle_publish(struct umqtt_connection *conn, uint8_t *data, int16_t len) {
+static void ICACHE_FLASH_ATTR umqtt_handle_publish(struct umqtt_connection *conn, uint8_t *data, int16_t len) {
     uint16_t toplen = (data[0] << 8) | data[1];
     char topic[toplen + 1];
     uint8_t payload[len - 2 - toplen];
@@ -209,7 +209,7 @@ static void umqtt_handle_publish(struct umqtt_connection *conn, uint8_t *data, i
     conn->message_callback(conn, topic, payload, sizeof(payload));
 }
 
-static void umqtt_packet_arrived(struct umqtt_connection *conn, uint8_t header, int16_t len) {
+static void ICACHE_FLASH_ATTR umqtt_packet_arrived(struct umqtt_connection *conn, uint8_t header, int16_t len) {
     uint8_t data[len];
 
     umqtt_circ_pop(&conn->rxbuff, data, len);
@@ -232,7 +232,7 @@ static void umqtt_packet_arrived(struct umqtt_connection *conn, uint8_t header, 
     }
 }
 
-void umqtt_process(struct umqtt_connection *conn) {
+void ICACHE_FLASH_ATTR umqtt_process(struct umqtt_connection *conn) {
     uint8_t buf[5];
     uint16_t i = 2;
 

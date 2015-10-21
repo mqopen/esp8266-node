@@ -23,8 +23,8 @@
 
 os_event_t user_proc_task_queue[CONFIG_PROC_TASK_QUEUE_LENGTH];
 
-static void _process(os_event_t *events);
-static void _process_operational_node(os_event_t *events);
+static void ICACHE_FLASH_ATTR _process(os_event_t *events);
+static void ICACHE_FLASH_ATTR _process_operational_node(os_event_t *events);
 
 void user_rf_pre_init(void) {
 }
@@ -39,11 +39,11 @@ void ICACHE_FLASH_ATTR user_init(void) {
                     CONFIG_PROC_TASK_QUEUE_LENGTH);
 }
 
-static void _process(os_event_t *events) {
+static void ICACHE_FLASH_ATTR _process(os_event_t *events) {
     if (node_current_state == NODE_STATE_OPERATIONAL) {
         _process_operational_node(events);
     }
 }
 
-static void _process_operational_node(os_event_t *events) {
+static void ICACHE_FLASH_ATTR _process_operational_node(os_event_t *events) {
 }
