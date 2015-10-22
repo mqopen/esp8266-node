@@ -39,22 +39,22 @@
 /**
  * MQTT client current state.
  */
-static ICACHE_FLASH_ATTR enum mqttclient_state mqttclient_state;
+static enum mqttclient_state mqttclient_state;
 
 /**
  * Timer for ending MQTT Keep Alive messages.
  */
-static ICACHE_FLASH_ATTR os_timer_t keep_alive_timer;
+static os_timer_t keep_alive_timer;
 
 /**
  * Timer for sending DHT measurements.
  */
-static ICACHE_FLASH_ATTR os_timer_t  publish_timer;
+static os_timer_t  publish_timer;
 
 /**
  * Network timer.
  */
-static ICACHE_FLASH_ATTR os_timer_t network_timer;
+static os_timer_t network_timer;
 
 /**
  * Timer for limit reconnect attempts.
@@ -64,24 +64,24 @@ static ICACHE_FLASH_ATTR os_timer_t network_timer;
 /**
  * TCP connection.
  */
-static ICACHE_FLASH_ATTR struct _esp_tcp _mqttclient_tcp;
+static struct _esp_tcp _mqttclient_tcp;
 
 /**
  * Network connection.
  */
-static ICACHE_FLASH_ATTR struct espconn _mqttclient_espconn = {
+static struct espconn _mqttclient_espconn = {
     .proto.tcp = &_mqttclient_tcp,
 };
 
 //static uint8_t *_mqttclient_send_buffer = sharedbuf.mqtt.send_buffer;
-static uint8_t _mqttclient_tx_buffer[200] ICACHE_FLASH_ATTR;
-static ICACHE_FLASH_ATTR uint8_t _mqttclient_rx_buffer[200];
+static uint8_t _mqttclient_tx_buffer[200];
+static uint8_t _mqttclient_rx_buffer[200];
 
 // TODO: make this variable uint16_t
-static ICACHE_FLASH_ATTR int16_t _mqttclient_send_length;
+static int16_t _mqttclient_send_length;
 
 /* MQTT connection structure instance. */
-static ICACHE_FLASH_ATTR struct umqtt_connection _mqtt = {
+static struct umqtt_connection _mqtt = {
     .txbuff = {
         .start = _mqttclient_tx_buffer,
         .length = sizeof(_mqttclient_tx_buffer),
@@ -166,7 +166,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
 static void ICACHE_FLASH_ATTR _mqttclient_connect_callback(void *arg) {
     espconn_regist_sentcb(&_mqttclient_espconn, _mqttclient_data_sent);
     espconn_regist_recvcb(&_mqttclient_espconn, _mqttclient_data_received);
-    system_os_post(CONFIG_SEND_TASK_PRIORITY, 0, 0 );
+    system_os_post(CONFIG_PROCESS_TASK_PRIORITY, 0, 0 );
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_reconnect_callback(void *arg, sint8 err) {

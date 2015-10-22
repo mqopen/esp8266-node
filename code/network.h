@@ -31,14 +31,4 @@ void ICACHE_FLASH_ATTR network_init(void);
  * Connect to AP.
  */
 void ICACHE_FLASH_ATTR network_connect(void);
-
-/**
- * Check IP connectivity.
- */
-void ICACHE_FLASH_ATTR network_check_ip(void);
-
-/**
- * Send data over network.
- */
-void ICACHE_FLASH_ATTR network_send(void *buf, uint16_t len);
 #endif

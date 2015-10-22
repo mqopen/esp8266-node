@@ -16,6 +16,7 @@
  */
 
 #include <os_type.h>
+#include <osapi.h>
 #include "user_config.h"
 #include "uart.h"
 #include "node.h"
@@ -34,14 +35,14 @@ void ICACHE_FLASH_ATTR user_init(void) {
     network_init();
     system_init_done_cb(network_connect);
     system_os_task(_process,
-                    CONFIG_SEND_TASK_PRIORITY,
+                    CONFIG_PROCESS_TASK_PRIORITY,
                     user_proc_task_queue,
                     CONFIG_PROC_TASK_QUEUE_LENGTH);
 }
 
 static void ICACHE_FLASH_ATTR _process(os_event_t *events) {
-    if (node_current_state == NODE_STATE_OPERATIONAL) {
-        _process_operational_node(events);
+    if (network_state == NETWORK_STATE_UP) {
+        os_printf("Network is up\r\n");
     }
 }
 
