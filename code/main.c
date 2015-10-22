@@ -19,20 +19,21 @@
 #include <osapi.h>
 #include "user_config.h"
 #include "uart.h"
-#include "node.h"
 #include "network.h"
+#include "mqttclient.h"
 
 os_event_t user_proc_task_queue[CONFIG_PROC_TASK_QUEUE_LENGTH];
 
 static void ICACHE_FLASH_ATTR _process(os_event_t *events);
-static void ICACHE_FLASH_ATTR _process_operational_node(os_event_t *events);
+static inline void _process_network_up(os_event_t *events);
 
-void user_rf_pre_init(void) {
+void ICACHE_FLASH_ATTR user_rf_pre_init(void) {
 }
 
 void ICACHE_FLASH_ATTR user_init(void) {
     uart_init(BIT_RATE_115200, BIT_RATE_115200);
     network_init();
+    mqttclient_init();
     system_init_done_cb(network_connect);
     system_os_task(_process,
                     CONFIG_PROCESS_TASK_PRIORITY,
@@ -42,9 +43,10 @@ void ICACHE_FLASH_ATTR user_init(void) {
 
 static void ICACHE_FLASH_ATTR _process(os_event_t *events) {
     if (network_state == NETWORK_STATE_UP) {
-        os_printf("Network is up\r\n");
+        _process_network_up(events);
     }
 }
 
-static void ICACHE_FLASH_ATTR _process_operational_node(os_event_t *events) {
+static inline void _process_network_up(os_event_t *events) {
+    mqttclient_start();
 }
