@@ -21,6 +21,7 @@
 #include <user_interface.h>
 #include <osapi.h>
 #include "user_config.h"
+#include "gpio16.h"
 #include "umqtt.h"
 #include "mqttclient.h"
 
@@ -45,9 +46,19 @@ static os_timer_t _keep_alive_timer;
 static os_timer_t  _publish_timer;
 
 /**
+ * Blinking with LED.
+ */
+static os_timer_t  _led_blink_timer;
+
+/**
+ * Activity LED indicator state.
+ */
+static bool _active_led_state;
+
+/**
  * Timer for limit reconnect attempts.
  */
-//static os_timer_t disconnected_wait_timer;
+static os_timer_t _reconnect_timer;
 
 /**
  * TCP connection.
@@ -83,27 +94,113 @@ static struct umqtt_connection _mqtt = {
 };
 
 /* Static function prototypes. */
+
+/**
+ * Publish MQTT data to broker.
+ *
+ * @todo Not implemented yet.
+ */
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void);
-//static void _mqttclient_handle_connection_established();
-static void _mqttclient_broker_connect(void);
-//static void _mqttclient_handle_disconnected_wait(void);
-//static void _mqttclient_send_data(void);
-//static void _mqttclient_mqtt_init(void);
+
+/**
+ * Send CONNECT message to MQTT broker.
+ */
+static void ICACHE_FLASH_ATTR _mqttclient_broker_connect(void);
+
+/**
+ * Send keep alive message to MQTT broker.
+ */
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void);
-//static void _umqttclient_handle_message(struct umqtt_connection __attribute__((unused)) *conn, char *topic, uint8_t *data, int len);
 
 /**
  * Establish TCP connection with remote MQTT server.
  */
 static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void);
 
+/**
+ * Callback function called when TCP connection is established with MQTT broker.
+ *
+ * @param arg
+ */
 static void ICACHE_FLASH_ATTR _mqttclient_connect_callback(void *arg);
+
+/**
+ * Reconnect callback.
+ *
+ * @param arg
+ * @param err
+ */
 static void ICACHE_FLASH_ATTR _mqttclient_reconnect_callback(void *arg, sint8 err);
+
+/**
+ * Disconnect callback.
+ *
+ * @param arg
+ */
 static void ICACHE_FLASH_ATTR _mqttclient_disconnect_callback(void *arg);
+
+/**
+ * TCP finish callback.
+ *
+ * @param arg
+ */
 static void ICACHE_FLASH_ATTR _mqttclient_write_finish_fn(void *arg);
+
+/**
+ * Data received callback.
+ *
+ * @param arg
+ * @param pdata
+ * @param len
+ */
 static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, unsigned short len);
+
+/**
+ * Data sent callback.
+ *
+ * @param arg
+ */
 static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg);
+
+/**
+ * Start all periodic MQTT timers (publish and keep alive messages).
+ */
 static void ICACHE_FLASH_ATTR _mqttclient_start_mqtt_timers(void);
+
+/**
+ * Stop all periodic MQTT timers.
+ */
+static void ICACHE_FLASH_ATTR _mqttclient_stop_mqtt_timers(void);
+
+/**
+ * Turn active LED on.
+ */
+static inline void _mqttclient_led_on(void);
+
+/**
+ * Turn active LED off.
+ */
+static inline void _mqttclient_led_off(void);
+
+/**
+ * Blink with actived LED.
+ */
+static void ICACHE_FLASH_ATTR _mqttclient_led_active_blink(void);
+
+/**
+ * Toggle active LED.
+ */
+static void ICACHE_FLASH_ATTR _mqttclient_led_toggle(void);
+
+/**
+ * Perform reconnect attempt. Called from reconnect timer.
+ */
+static void ICACHE_FLASH_ATTR _mqttclient_do_reconnect(void);
+
+/**
+ * Schedule reconnect attempt.
+ */
+static inline void _mqttclient_schedule_reconnect(void);
 
 /**
  * Send data stored in MQTT RX buffer to broker.
@@ -111,10 +208,22 @@ static void ICACHE_FLASH_ATTR _mqttclient_start_mqtt_timers(void);
 static void ICACHE_FLASH_ATTR _mqttclient_data_send(void);
 
 void ICACHE_FLASH_ATTR mqttclient_init(void) {
+
+    /* Signalization LED. */
+    gpio16_output_conf();
+    _mqttclient_led_off();
+
+    /* Initiate timers. */
     os_timer_disarm(&_keep_alive_timer);
     os_timer_disarm(&_publish_timer);
+    os_timer_disarm(&_led_blink_timer);
+    os_timer_disarm(&_reconnect_timer);
+
+    /* Assign functions for timers. */
     os_timer_setfn(&_keep_alive_timer, (os_timer_func_t *) _mqttclient_umqtt_keep_alive, NULL);
     os_timer_setfn(&_publish_timer, (os_timer_func_t *) _mqttclient_publish, NULL);
+    os_timer_setfn(&_led_blink_timer, (os_timer_func_t *) _mqttclient_led_toggle, NULL);
+    os_timer_setfn(&_reconnect_timer, (os_timer_func_t *) _mqttclient_do_reconnect, NULL);
 }
 
 void ICACHE_FLASH_ATTR mqttclient_start(void) {
@@ -145,23 +254,31 @@ static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
 static void ICACHE_FLASH_ATTR _mqttclient_connect_callback(void *arg) {
     espconn_regist_sentcb(&_mqttclient_espconn, _mqttclient_data_sent);
     espconn_regist_recvcb(&_mqttclient_espconn, _mqttclient_data_received);
+    _mqttclient_led_on();
     _mqttclient_broker_connect();
     _mqttclient_start_mqtt_timers();
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_reconnect_callback(void *arg, sint8 err) {
-    espconn_connect(&_mqttclient_espconn);
+    _mqttclient_stop_mqtt_timers();
+    _mqttclient_led_off();
+    _mqttclient_schedule_reconnect();
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_disconnect_callback(void *arg) {
-    espconn_connect(&_mqttclient_espconn);
+    _mqttclient_stop_mqtt_timers();
+    _mqttclient_led_off();
+    _mqttclient_schedule_reconnect();
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_write_finish_fn(void *arg) {
-    os_printf("__ Finished __\r\n");
+    _mqttclient_led_off();
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, unsigned short len) {
+    umqtt_circ_push(&_mqtt.rxbuff, pdata, len);
+    umqtt_process(&_mqtt);
+    _mqttclient_data_send();
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
@@ -180,13 +297,58 @@ static void ICACHE_FLASH_ATTR _mqttclient_start_mqtt_timers(void) {
     os_timer_arm(&_publish_timer, CONFIG_MQTT_PUBLISH_INTERVAL_MS, 1);
 }
 
+static void ICACHE_FLASH_ATTR _mqttclient_stop_mqtt_timers(void) {
+    os_timer_disarm(&_keep_alive_timer);
+    os_timer_disarm(&_publish_timer);
+}
+
 static uint8_t _rx_buf[200];
 
 static void ICACHE_FLASH_ATTR _mqttclient_data_send(void) {
     uint16_t len = umqtt_circ_pop(&_mqtt.txbuff, _rx_buf, sizeof(_rx_buf));
     if (len) {
         espconn_send(&_mqttclient_espconn, _rx_buf, len);
+        _mqttclient_led_active_blink();
     }
+}
+
+static inline void _mqttclient_led_on(void) {
+    gpio16_output_set(0);
+    _active_led_state = true;
+}
+
+static inline void _mqttclient_led_off(void) {
+    gpio16_output_set(1);
+    _active_led_state = false;
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_led_active_blink(void) {
+    _mqttclient_led_toggle();
+    os_timer_arm(&_led_blink_timer, CONFIG_MQTT_ACTIVE_LED_INTERVAL_MS, 0);
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_led_toggle(void) {
+    if (_active_led_state) {
+        _mqttclient_led_off();
+    } else {
+        _mqttclient_led_on();
+    }
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_do_reconnect(void) {
+    espconn_connect(&_mqttclient_espconn);
+}
+
+static inline void _mqttclient_schedule_reconnect(void) {
+    os_timer_arm(&_reconnect_timer, 1000, 0);
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_broker_connect(void) {
+    umqtt_init(&_mqtt);
+    umqtt_circ_init(&_mqtt.txbuff);
+    umqtt_circ_init(&_mqtt.rxbuff);
+    umqtt_connect(&_mqtt, CONFIG_MQTT_KEEP_ALIVE, CONFIG_MQTT_CLIENT_ID);
+    _mqttclient_data_send();
 }
 
 /* **************************************************************************** */
@@ -256,24 +418,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_send(void) {
 //        _mqttclient_mqtt_init();
 //    }
 //}
-
-static void _mqttclient_broker_connect(void) {
-    umqtt_init(&_mqtt);
-    umqtt_circ_init(&_mqtt.txbuff);
-    umqtt_circ_init(&_mqtt.rxbuff);
-    umqtt_connect(&_mqtt, CONFIG_MQTT_KEEP_ALIVE, CONFIG_MQTT_CLIENT_ID);
-    _mqttclient_data_send();
-//    struct uip_conn *uc;
-//    uip_ipaddr_t ip;
-//
-//    uip_ipaddr(&ip, MQTT_BROKER_IP_ADDR0, MQTT_BROKER_IP_ADDR1, MQTT_BROKER_IP_ADDR2, MQTT_BROKER_IP_ADDR3);
-//    uc = uip_connect(&ip, htons(MQTT_BROKER_PORT));
-//    if (uc == NULL) {
-//        return;
-//    }
-//    uc->appstate.conn = &mqtt;
-//    update_state(MQTTCLIENT_BROKER_CONNECTING);
-}
 
 //static void _mqttclient_handle_disconnected_wait(void) {
 //    if (timer_tryrestart(&disconnected_wait_timer))

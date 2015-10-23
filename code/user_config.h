@@ -4,7 +4,7 @@
 #define CONFIG_WIFI_SSID        "hostapd"
 #define CONFIG_WIFI_PASSWORD    "password"
 
-#define CONFIG_USE_DHCP     0
+#define CONFIG_USE_DHCP             0
 #if ! CONFIG_USE_DHCP
 #define CONFIG_CLIENT_IP_ADDRESS0   192
 #define CONFIG_CLIENT_IP_ADDRESS1   168
@@ -36,5 +36,7 @@
 
 #define CONFIG_MQTT_KEEP_ALIVE          10
 #define CONFIG_MQTT_CLIENT_ID           "esp8266-broker"
+
+#define CONFIG_MQTT_ACTIVE_LED_INTERVAL_MS  100
 
 #endif
