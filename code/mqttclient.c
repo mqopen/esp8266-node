@@ -23,6 +23,7 @@
 #include "user_config.h"
 #include "gpio16.h"
 #include "umqtt.h"
+#include "bmp180.h"
 #include "mqttclient.h"
 
 //#define send_buffer_length      sizeof(sharedbuf.mqtt.send_buffer)
@@ -285,6 +286,14 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
+    uint16_t test = 1;
+    os_printf("Test 0x%02x, 0x%02x\r\n", *(((uint8_t *) &test) + 0), *(((uint8_t *) &test) + 1));
+    bmp180_read_temperature();
+    //if (bmp180_test()) {
+    //    os_printf("Test passed\r\n");
+    //} else {
+    //    os_printf("Test failed\r\n");
+    //}
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
