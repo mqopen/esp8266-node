@@ -10,28 +10,32 @@
 #define BMP180_REGISTER_CALIBRATION 0xaa
 #define BMP180_REGISTER_CHIP_ID     0xd0
 
-#define BMP180_CALIBRATION_AC1_MSB_OFFSET   0
-#define BMP180_CALIBRATION_AC1_LSB_OFFSET   1
-#define BMP180_CALIBRATION_AC2_MSB_OFFSET   2
-#define BMP180_CALIBRATION_AC2_LSB_OFFSET   3
-#define BMP180_CALIBRATION_AC3_MSB_OFFSET   4
-#define BMP180_CALIBRATION_AC3_LSB_OFFSET   5
-#define BMP180_CALIBRATION_AC4_MSB_OFFSET   6
-#define BMP180_CALIBRATION_AC4_LSB_OFFSET   7
-#define BMP180_CALIBRATION_AC5_MSB_OFFSET   8
-#define BMP180_CALIBRATION_AC5_LSB_OFFSET   9
-#define BMP180_CALIBRATION_AC6_MSB_OFFSET   10
-#define BMP180_CALIBRATION_AC6_LSB_OFFSET   11
-#define BMP180_CALIBRATION_B1_MSB_OFFSET    12
-#define BMP180_CALIBRATION_B1_LSB_OFFSET    13
-#define BMP180_CALIBRATION_B2_MSB_OFFSET    14
-#define BMP180_CALIBRATION_B2_LSB_OFFSET    15
-#define BMP180_CALIBRATION_MB_MSB_OFFSET    16
-#define BMP180_CALIBRATION_MB_LSB_OFFSET    17
-#define BMP180_CALIBRATION_MC_MSB_OFFSET    18
-#define BMP180_CALIBRATION_MC_LSB_OFFSET    19
-#define BMP180_CALIBRATION_MD_MSB_OFFSET    20
-#define BMP180_CALIBRATION_MD_LSB_OFFSET    21
+#define BMP180_CALIBRATION_AC1_MSB  0
+#define BMP180_CALIBRATION_AC1_LSB  1
+#define BMP180_CALIBRATION_AC2_MSB  2
+#define BMP180_CALIBRATION_AC2_LSB  3
+#define BMP180_CALIBRATION_AC3_MSB  4
+#define BMP180_CALIBRATION_AC3_LSB  5
+#define BMP180_CALIBRATION_AC4_MSB  6
+#define BMP180_CALIBRATION_AC4_LSB  7
+#define BMP180_CALIBRATION_AC5_MSB  8
+#define BMP180_CALIBRATION_AC5_LSB  9
+#define BMP180_CALIBRATION_AC6_MSB  10
+#define BMP180_CALIBRATION_AC6_LSB  11
+#define BMP180_CALIBRATION_B1_MSB   12
+#define BMP180_CALIBRATION_B1_LSB   13
+#define BMP180_CALIBRATION_B2_MSB   14
+#define BMP180_CALIBRATION_B2_LSB   15
+#define BMP180_CALIBRATION_MB_MSB   16
+#define BMP180_CALIBRATION_MB_LSB   17
+#define BMP180_CALIBRATION_MC_MSB   18
+#define BMP180_CALIBRATION_MC_LSB   19
+#define BMP180_CALIBRATION_MD_MSB   20
+#define BMP180_CALIBRATION_MD_LSB   21
+
+#define BMP180_OUT_MSB              0xf6
+#define BMP180_OUT_LSB              0xf7
+#define BMP180_OUT_XLSB             0xf8
 
 struct bmp180_calibration_data {
     int16_t ac1;
@@ -45,7 +49,7 @@ struct bmp180_calibration_data {
     int16_t mb;
     int16_t mc;
     int16_t md;
-} __attribute__((__packed__));
+};
 
 enum bmp180_read_status {
     BMP180_READ_STATUS_OK,
@@ -54,11 +58,19 @@ enum bmp180_read_status {
     BMP180_READ_STATUS_READ_ADDRESS_ERROR,
 };
 
-extern int16_t bmp180_temperature;
+/**
+ * Sensor measurement.
+ */
+struct bmp180_data {
+    int32_t temperature;            /**< Temperature in m degrees C. */
+    uint32_t pressure;              /**< Pressure in Pa. */
+};
+
+extern struct bmp180_data bmp180_data;
 
 void ICACHE_FLASH_ATTR bmp180_init(void);
 uint8_t ICACHE_FLASH_ATTR bmp180_get_chip_id(void);
 bool ICACHE_FLASH_ATTR bmp180_test(void);
-enum bmp180_read_status bmp180_read_temperature(void);
+enum bmp180_read_status bmp180_read(void);
 
 #endif
