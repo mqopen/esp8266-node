@@ -1,8 +1,7 @@
 CROSS := xtensa-lx106-elf-
 CC := $(CROSS)gcc
 LD := $(CROSS)gcc
-# TODO: -Wall
-CFLAGS = -I. -mlongcalls -Os -DICACHE_FLASH
+CFLAGS = -Wall -Wno-implicit-function-declaration -I. -mlongcalls -Os -DICACHE_FLASH
 LDLIBS = -nostdlib -Wl,--start-group -lmain -lnet80211 -lwpa -llwip -lpp -lphy  -Wl,--end-group -lgcc
 LDFLAGS = -Teagle.app.v6.ld -Os -Wl,-static
 

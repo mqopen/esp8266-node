@@ -17,6 +17,7 @@
 
 #include <os_type.h>
 #include <osapi.h>
+#include <user_interface.h>
 #include "user_config.h"
 #include "uart.h"
 #include "i2c_master.h"

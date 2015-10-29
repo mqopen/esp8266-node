@@ -25,7 +25,7 @@
 extern UartDevice    UartDev;
 
 LOCAL struct UartBuffer* pTxBuffer = NULL;
-LOCAL struct UartBuffer* pRxBuffer = NULL;
+//LOCAL struct UartBuffer* pRxBuffer = NULL;
 
 /*uart demo with a system task, to output what uart receives*/
 /*this is a example to process uart data from task,please change the priority to fit your application task if exists*/
@@ -214,11 +214,12 @@ uart0_rx_intr_handler(void *para)
     /* uart0 and uart1 intr combine togther, when interrupt occur, see reg 0x3ff20020, bit2, bit0 represents
     * uart1 and uart0 respectively
     */
-    uint8 RcvChar;
+    //uint8 RcvChar;
     uint8 uart_no = UART0;//UartDev.buff_uart_no;
-    uint8 fifo_len = 0;
-    uint8 buf_idx = 0;
-    uint8 temp,cnt;
+    //uint8 fifo_len = 0;
+    //uint8 buf_idx = 0;
+    //uint8 temp;
+    //uint8 cnt;
     //RcvMsgBuff *pRxBuff = (RcvMsgBuff *)para;
 
     	/*ATTENTION:*/
@@ -229,17 +230,17 @@ uart0_rx_intr_handler(void *para)
         DBG1("FRM_ERR\r\n");
         WRITE_PERI_REG(UART_INT_CLR(uart_no), UART_FRM_ERR_INT_CLR);
     }else if(UART_RXFIFO_FULL_INT_ST == (READ_PERI_REG(UART_INT_ST(uart_no)) & UART_RXFIFO_FULL_INT_ST)){
-        DBG("f");
+        //DBG("f");
         uart_rx_intr_disable(UART0);
         WRITE_PERI_REG(UART_INT_CLR(UART0), UART_RXFIFO_FULL_INT_CLR);
         system_os_post(uart_recvTaskPrio, 0, 0);
     }else if(UART_RXFIFO_TOUT_INT_ST == (READ_PERI_REG(UART_INT_ST(uart_no)) & UART_RXFIFO_TOUT_INT_ST)){
-        DBG("t");
+        //DBG("t");
         uart_rx_intr_disable(UART0);
         WRITE_PERI_REG(UART_INT_CLR(UART0), UART_RXFIFO_TOUT_INT_CLR);
         system_os_post(uart_recvTaskPrio, 0, 0);
     }else if(UART_TXFIFO_EMPTY_INT_ST == (READ_PERI_REG(UART_INT_ST(uart_no)) & UART_TXFIFO_EMPTY_INT_ST)){
-        DBG("e");
+        //DBG("e");
 	/* to output uart data from uart buffer directly in empty interrupt handler*/
 	/*instead of processing in system event, in order not to wait for current task/function to quit */
 	/*ATTENTION:*/
@@ -403,7 +404,7 @@ Uart_Buf_Init(uint32 buf_size)
         DBG1("no buf for uart\n\r");
         return NULL;
     }else{
-        DBG("test heap size: %d\n\r",heap_size);
+        //DBG("test heap size: %d\n\r",heap_size);
         struct UartBuffer* pBuff = (struct UartBuffer* )os_malloc(sizeof(struct UartBuffer));
         pBuff->UartBuffSize = buf_size;
         pBuff->pUartBuff = (uint8*)os_malloc(pBuff->UartBuffSize);

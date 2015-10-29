@@ -28,14 +28,13 @@
 #include "mqttclient.h"
 
 //#define send_buffer_length      sizeof(sharedbuf.mqtt.send_buffer)
-#define send_buffer_length      sizeof(_mqttclient_send_buffer)
-#define current_state           mqttclient_state
-#define update_state(state)     (mqttclient_state = state)
+//#define send_buffer_length      sizeof(_mqttclient_send_buffer)
+//#define update_state(state)     (mqttclient_state = state)
 
 /**
  * MQTT client current state.
  */
-static enum mqttclient_state mqttclient_state;
+//static enum mqttclient_state mqttclient_state;
 
 /**
  * Timer for ending MQTT Keep Alive messages.
@@ -79,7 +78,7 @@ static uint8_t _mqttclient_tx_buffer[200];
 static uint8_t _mqttclient_rx_buffer[200];
 
 // TODO: make this variable uint16_t
-static int16_t _mqttclient_send_length;
+//static int16_t _mqttclient_send_length;
 
 /* MQTT connection structure instance. */
 static struct umqtt_connection _mqtt = {
@@ -88,8 +87,8 @@ static struct umqtt_connection _mqtt = {
         .length = sizeof(_mqttclient_tx_buffer),
     },
     .rxbuff = {
-        .start = _mqttclient_tx_buffer,
-        .length = sizeof(_mqttclient_tx_buffer),
+        .start = _mqttclient_rx_buffer,
+        .length = sizeof(_mqttclient_rx_buffer),
     },
 //    .message_callback = _umqttclient_handle_message,
 //    .state = UMQTT_STATE_INIT,
@@ -278,7 +277,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_write_finish_fn(void *arg) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, unsigned short len) {
-    umqtt_circ_push(&_mqtt.rxbuff, pdata, len);
+    umqtt_circ_push(&_mqtt.rxbuff, (uint8_t *) pdata, (uint16_t) len);
     umqtt_process(&_mqtt);
     _mqttclient_data_send();
 }
@@ -296,12 +295,12 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
 
     // TODO: hardcoded constant
     char buf[20];
-    uint32_t len;
+    uint16_t len;
     if (status == BMP180_READ_STATUS_OK) {
         len = os_sprintf(buf, "%d.%d", bmp180_data.temperature / 1000, bmp180_data.temperature % 1000);
-        umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_TEMPERATURE, buf, len);
+        umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_TEMPERATURE, (uint8_t *) buf, len);
         len = os_sprintf(buf, "%d", bmp180_data.pressure);
-        umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_PRESSURE, buf, len);
+        umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_PRESSURE, (uint8_t *) buf, len);
     }
     _mqttclient_data_send();
 }

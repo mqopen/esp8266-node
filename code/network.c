@@ -39,7 +39,7 @@ static void ICACHE_FLASH_ATTR _network_init_timer(void);
  *
  * @param state New network state.
  */
-static inline _network_update_state(enum network_state state);
+static inline void _network_update_state(enum network_state state);
 
 /* Implementation. */
 
@@ -96,6 +96,6 @@ static void ICACHE_FLASH_ATTR _network_check_ip(void) {
     }
 }
 
-static inline _network_update_state(enum network_state state) {
+static inline void _network_update_state(enum network_state state) {
     network_state = state;
 }

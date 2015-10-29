@@ -61,7 +61,7 @@ void ICACHE_FLASH_ATTR umqtt_circ_init(struct umqtt_circ_buffer *buff) {
     buff->datalen = 0;
 }
 
-int16_t ICACHE_FLASH_ATTR umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len) {
+int16_t ICACHE_FLASH_ATTR umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, uint16_t len) {
     uint8_t *bend = buff->start + buff->length - 1;
     /* This points to new byte */
     uint8_t *dend = (buff->pointer - buff->start + buff->datalen) % buff->length + buff->start;
@@ -171,7 +171,7 @@ void ICACHE_FLASH_ATTR umqtt_subscribe(struct umqtt_connection *conn, char *topi
     conn->nack_subscribe++;
 }
 
-void ICACHE_FLASH_ATTR umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, int16_t datalen) {
+void ICACHE_FLASH_ATTR umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, uint16_t datalen) {
     int16_t toplen = strlen(topic);
     uint8_t fixed;
     uint8_t remlen[4];

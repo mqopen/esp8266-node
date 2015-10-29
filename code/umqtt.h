@@ -97,7 +97,7 @@ struct umqtt_connection {
 void ICACHE_FLASH_ATTR umqtt_circ_init(struct umqtt_circ_buffer *buff);
 
 /* Return the amount of bytes left */
-int16_t ICACHE_FLASH_ATTR umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len);
+int16_t ICACHE_FLASH_ATTR umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, uint16_t len);
 
 /* Returns amount of bytes popped/peeked */
 int16_t ICACHE_FLASH_ATTR umqtt_circ_pop(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len);
@@ -105,7 +105,7 @@ int16_t ICACHE_FLASH_ATTR umqtt_circ_peek(struct umqtt_circ_buffer *buff, uint8_
 void ICACHE_FLASH_ATTR umqtt_init(struct umqtt_connection *conn);
 void ICACHE_FLASH_ATTR umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid);
 void ICACHE_FLASH_ATTR umqtt_subscribe(struct umqtt_connection *conn, char *topic);
-void ICACHE_FLASH_ATTR umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, int16_t datalen);
+void ICACHE_FLASH_ATTR umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, uint16_t datalen);
 void ICACHE_FLASH_ATTR umqtt_ping(struct umqtt_connection *conn);
 void ICACHE_FLASH_ATTR umqtt_process(struct umqtt_connection *conn);
 

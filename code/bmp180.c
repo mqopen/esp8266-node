@@ -33,7 +33,7 @@ bool ICACHE_FLASH_ATTR bmp180_test(void) {
 enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss oss) {
     /* Read temperature. */
     int32_t _ut;
-    int32_t _up;
+    int32_t _up = 0;
     int32_t _x1;
     int32_t _x2;
     int32_t _x3;
@@ -53,6 +53,8 @@ enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss o
         _b5 = _x1 + _x2;
         _t = (_b5 + 8) / (2<<3);
         bmp180_data.temperature = _t * 100;
+    } else {
+        return _status;
     }
 
     /* Read pressure. */
@@ -83,17 +85,17 @@ enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss o
 }
 
 static void ICACHE_FLASH_ATTR _bmp180_init_calibration(void) {
-    _bmp180_read_short(BMP180_CALIBRATION_AC1_MSB, BMP180_CALIBRATION_AC1_LSB, &_bmp180_calibration.ac1);
-    _bmp180_read_short(BMP180_CALIBRATION_AC2_MSB, BMP180_CALIBRATION_AC2_LSB, &_bmp180_calibration.ac2);
-    _bmp180_read_short(BMP180_CALIBRATION_AC3_MSB, BMP180_CALIBRATION_AC3_LSB, &_bmp180_calibration.ac3);
+    _bmp180_read_short(BMP180_CALIBRATION_AC1_MSB, BMP180_CALIBRATION_AC1_LSB, (uint16_t *) &_bmp180_calibration.ac1);
+    _bmp180_read_short(BMP180_CALIBRATION_AC2_MSB, BMP180_CALIBRATION_AC2_LSB, (uint16_t *) &_bmp180_calibration.ac2);
+    _bmp180_read_short(BMP180_CALIBRATION_AC3_MSB, BMP180_CALIBRATION_AC3_LSB, (uint16_t *) &_bmp180_calibration.ac3);
     _bmp180_read_short(BMP180_CALIBRATION_AC4_MSB, BMP180_CALIBRATION_AC4_LSB, &_bmp180_calibration.ac4);
     _bmp180_read_short(BMP180_CALIBRATION_AC5_MSB, BMP180_CALIBRATION_AC5_LSB, &_bmp180_calibration.ac5);
     _bmp180_read_short(BMP180_CALIBRATION_AC6_MSB, BMP180_CALIBRATION_AC6_LSB, &_bmp180_calibration.ac6);
-    _bmp180_read_short(BMP180_CALIBRATION_B1_MSB, BMP180_CALIBRATION_B1_LSB, &_bmp180_calibration.b1);
-    _bmp180_read_short(BMP180_CALIBRATION_B2_MSB, BMP180_CALIBRATION_B2_LSB, &_bmp180_calibration.b2);
-    _bmp180_read_short(BMP180_CALIBRATION_MB_MSB, BMP180_CALIBRATION_MB_LSB, &_bmp180_calibration.mb);
-    _bmp180_read_short(BMP180_CALIBRATION_MC_MSB, BMP180_CALIBRATION_MC_LSB, &_bmp180_calibration.mc);
-    _bmp180_read_short(BMP180_CALIBRATION_MD_MSB, BMP180_CALIBRATION_MB_LSB, &_bmp180_calibration.md);
+    _bmp180_read_short(BMP180_CALIBRATION_B1_MSB, BMP180_CALIBRATION_B1_LSB, (uint16_t *) &_bmp180_calibration.b1);
+    _bmp180_read_short(BMP180_CALIBRATION_B2_MSB, BMP180_CALIBRATION_B2_LSB, (uint16_t *) &_bmp180_calibration.b2);
+    _bmp180_read_short(BMP180_CALIBRATION_MB_MSB, BMP180_CALIBRATION_MB_LSB, (uint16_t *) &_bmp180_calibration.mb);
+    _bmp180_read_short(BMP180_CALIBRATION_MC_MSB, BMP180_CALIBRATION_MC_LSB, (uint16_t *) &_bmp180_calibration.mc);
+    _bmp180_read_short(BMP180_CALIBRATION_MD_MSB, BMP180_CALIBRATION_MB_LSB, (uint16_t *) &_bmp180_calibration.md);
 }
 
 static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_ut(int32_t *ut) {
