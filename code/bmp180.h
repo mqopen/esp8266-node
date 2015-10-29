@@ -71,6 +71,6 @@ extern struct bmp180_data bmp180_data;
 void ICACHE_FLASH_ATTR bmp180_init(void);
 uint8_t ICACHE_FLASH_ATTR bmp180_get_chip_id(void);
 bool ICACHE_FLASH_ATTR bmp180_test(void);
-enum bmp180_read_status bmp180_read(void);
+enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(void);
 
 #endif

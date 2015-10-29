@@ -286,7 +286,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
-    bmp180_read();
+    //bmp180_read();
     //if (bmp180_test()) {
     //    os_printf("Test passed\r\n");
     //} else {
