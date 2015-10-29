@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <ets_sys.h>
 #include <os_type.h>
 #include <ip_addr.h>
 #include <espconn.h>
@@ -286,7 +287,23 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
-    enum bmp180_read_status status = bmp180_read();
+    enum bmp180_read_status status = bmp180_read(BMP180_OSS_8);
+    if (status == BMP180_READ_STATUS_OK) {
+        os_printf("T: %d.%d, P: %d\r\n", bmp180_data.temperature / 1000, bmp180_data.temperature % 1000, bmp180_data.pressure);
+    } else {
+        os_printf("Read failed\r\n");
+    }
+
+    // TODO: hardcoded constant
+    char buf[20];
+    uint32_t len;
+    if (status == BMP180_READ_STATUS_OK) {
+        len = os_sprintf(buf, "%d.%d", bmp180_data.temperature / 1000, bmp180_data.temperature % 1000);
+        umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_TEMPERATURE, buf, len);
+        len = os_sprintf(buf, "%d", bmp180_data.pressure);
+        umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_PRESSURE, buf, len);
+    }
+    _mqttclient_data_send();
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
