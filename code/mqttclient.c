@@ -286,12 +286,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
-    //bmp180_read();
-    //if (bmp180_test()) {
-    //    os_printf("Test passed\r\n");
-    //} else {
-    //    os_printf("Test failed\r\n");
-    //}
+    enum bmp180_read_status status = bmp180_read();
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {

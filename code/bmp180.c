@@ -42,6 +42,7 @@ enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(void) {
     int32_t _b6;
     uint32_t _b7;
     int32_t _p;
+    int32_t _t;
 
     enum bmp180_read_status status;
     status = _bmp180_read_ut(&_ut);
@@ -49,7 +50,8 @@ enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(void) {
         _x1 = (_ut - _bmp180_calibration.ac6) * _bmp180_calibration.ac5 / (2<<14);
         _x2 = _bmp180_calibration.mc * (2<<10) / (_x1 + _bmp180_calibration.md);
         _b5 = _x1 + _x2;
-        bmp180_data.temperature = (_b5 + 8) / (2<<3) * 100;
+        _t = (_b5 + 8) / (2<<3);
+        bmp180_data.temperature = _t * 100;
     }
 
     /* Read pressure. */
@@ -64,7 +66,7 @@ enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(void) {
         _x1 = _bmp180_calibration.ac3 * _b6 / (2<<12);
         _x2 = (_bmp180_calibration.b1 * (_b6 * _b6 / (2<<11))) / (2<<15);
         _x3 = ((_x1 + _x2) + 2) / (2<<1);
-        _b4 = _bmp180_calibration.ac4 * ((uint32_t) (_x3 + 32768) / (2<<14));
+        _b4 = _bmp180_calibration.ac4 * ((uint32_t) (_x3 + 32768)) / (2<<14);
         /* oss */
         _b7 = ((uint32_t) (_up - _b3)) * (50000 >> 4);
         if (_b7 < 0x80000000) {
@@ -80,7 +82,14 @@ enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(void) {
     }
 
     if (status == BMP180_READ_STATUS_OK) {
-        os_printf("UT: %d, X1: %d, X2: %d, B5: %d\r\n", _ut, _x1, _x2, _b5);
+        //os_printf("X1: %d\r\n", _x1);
+        //os_printf("X2: %d\r\n", _x2);
+        //os_printf("X3: %d\r\n", _x3);
+        //os_printf("B3: %d\r\n", _b3);
+        //os_printf("B4: %d\r\n", _b4);
+        //os_printf("B5: %d\r\n", _b5);
+        //os_printf("B6: %d\r\n", _b6);
+        //os_printf("B7: %d\r\n", _b7);
         os_printf("T: %d.%d, P: %d\r\n", bmp180_data.temperature / 1000,
                                             bmp180_data.temperature % 1000,
                                             bmp180_data.pressure);
@@ -106,18 +115,18 @@ static void ICACHE_FLASH_ATTR _bmp180_init_calibration(void) {
     _bmp180_read_short(0xbc, 0xbd, &_bmp180_calibration.mc);
     _bmp180_read_short(0xbe, 0xbf, &_bmp180_calibration.md);
 
-    //os_printf("AC1: 0x%04x\r\n", _bmp180_calibration.ac1);
-    //os_printf("AC2: 0x%04x\r\n", _bmp180_calibration.ac2);
-    //os_printf("AC3: 0x%04x\r\n", _bmp180_calibration.ac3);
-    //os_printf("AC4: 0x%04x\r\n", _bmp180_calibration.ac4);
-    //os_printf("AC5: 0x%04x\r\n", _bmp180_calibration.ac5);
-    //os_printf("AC6: 0x%04x\r\n", _bmp180_calibration.ac6);
-    //
-    //os_printf("B1: 0x%04x\r\n", _bmp180_calibration.b1);
-    //os_printf("B2: 0x%04x\r\n", _bmp180_calibration.b2);
-    //os_printf("MB: 0x%04x\r\n", _bmp180_calibration.mb);
-    //os_printf("MC: 0x%04x\r\n", _bmp180_calibration.mc);
-    //os_printf("MD: 0x%04x\r\n", _bmp180_calibration.md);
+    os_printf("AC1: 0x%04x\r\n", _bmp180_calibration.ac1);
+    os_printf("AC2: 0x%04x\r\n", _bmp180_calibration.ac2);
+    os_printf("AC3: 0x%04x\r\n", _bmp180_calibration.ac3);
+    os_printf("AC4: 0x%04x\r\n", _bmp180_calibration.ac4);
+    os_printf("AC5: 0x%04x\r\n", _bmp180_calibration.ac5);
+    os_printf("AC6: 0x%04x\r\n", _bmp180_calibration.ac6);
+
+    os_printf("B1: 0x%04x\r\n", _bmp180_calibration.b1);
+    os_printf("B2: 0x%04x\r\n", _bmp180_calibration.b2);
+    os_printf("MB: 0x%04x\r\n", _bmp180_calibration.mb);
+    os_printf("MC: 0x%04x\r\n", _bmp180_calibration.mc);
+    os_printf("MD: 0x%04x\r\n", _bmp180_calibration.md);
 }
 
 static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_ut(int32_t *ut) {
