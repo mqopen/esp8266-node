@@ -27,15 +27,6 @@
 #include "bmp180.h"
 #include "mqttclient.h"
 
-//#define send_buffer_length      sizeof(sharedbuf.mqtt.send_buffer)
-//#define send_buffer_length      sizeof(_mqttclient_send_buffer)
-//#define update_state(state)     (mqttclient_state = state)
-
-/**
- * MQTT client current state.
- */
-//static enum mqttclient_state mqttclient_state;
-
 /**
  * Timer for ending MQTT Keep Alive messages.
  */
@@ -73,12 +64,9 @@ static struct espconn _mqttclient_espconn = {
     .proto.tcp = &_mqttclient_tcp,
 };
 
-//static uint8_t *_mqttclient_send_buffer = sharedbuf.mqtt.send_buffer;
 static uint8_t _mqttclient_tx_buffer[200];
 static uint8_t _mqttclient_rx_buffer[200];
 
-// TODO: make this variable uint16_t
-//static int16_t _mqttclient_send_length;
 
 /* MQTT connection structure instance. */
 static struct umqtt_connection _mqtt = {
@@ -90,8 +78,6 @@ static struct umqtt_connection _mqtt = {
         .start = _mqttclient_rx_buffer,
         .length = sizeof(_mqttclient_rx_buffer),
     },
-//    .message_callback = _umqttclient_handle_message,
-//    .state = UMQTT_STATE_INIT,
 };
 
 /* Static function prototypes. */
