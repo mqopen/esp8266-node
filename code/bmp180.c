@@ -26,11 +26,50 @@ struct bmp180_data bmp180_data;
 
 /* Static function prototypes. */
 
+/**
+ * Read uncalibrated temperature.
+ *
+ * @param ut Pointer to memory where UT will be stored.
+ * @return Result of read operation.
+ */
 static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_ut(int32_t *ut);
+
+/**
+ * Read uncalibrated pressure.
+ *
+ * @param up Pointer to memory where UP will be stored.
+ * @return Result of read operation.
+ */
 static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_up(int32_t *up, enum bmp180_pressure_oss oss);
+
+/**
+ * Read value from the register.
+ *
+ * @return Result of read operation.
+ */
 static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read(uint8_t reg, uint8_t *buf, uint32_t len);
+
+/**
+ * Read two byte value from two reisters.
+ *
+ * @param msb Address of MSB register.
+ * @param lsb Address of LSB register.
+ * @return Result of read operation.
+ */
 static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_short(uint8_t msb, uint8_t lsb, uint16_t *value);
+
+/**
+ * Write to chip.
+ *
+ * @param address
+ * @param value
+ * @return
+ */
 static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_write(uint8_t address, uint8_t value);
+
+/**
+ * Init calibration.
+ */
 static void ICACHE_FLASH_ATTR _bmp180_init_calibration(void);
 
 void ICACHE_FLASH_ATTR bmp180_init(void) {
