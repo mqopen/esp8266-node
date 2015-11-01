@@ -57,6 +57,9 @@
 #define BMP180_SCO          5
 #define BMP180_OSS_SHIFT    6
 
+/**
+ * Calibration data readed at start-up.
+ */
 struct bmp180_calibration_data {
     int16_t ac1;
     int16_t ac2;
@@ -71,6 +74,9 @@ struct bmp180_calibration_data {
     int16_t md;
 };
 
+/**
+ * Sensor read status.
+ */
 enum bmp180_read_status {
     BMP180_READ_STATUS_OK,
     BMP180_READ_STATUS_WRITE_ADDRESS_ERROR,
@@ -78,6 +84,9 @@ enum bmp180_read_status {
     BMP180_READ_STATUS_READ_ADDRESS_ERROR,
 };
 
+/**
+ * Possible oss levels.
+ */
 enum bmp180_pressure_oss {
     BMP180_OSS_SINGLE = 0,
     BMP180_OSS_2 = 1,
