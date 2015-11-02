@@ -21,6 +21,7 @@
 #include <user_interface.h>
 #include "user_config.h"
 #include "mqttclient.h"
+#include "node.h"
 #include "user_config.h"
 #include "network.h"
 
@@ -115,4 +116,7 @@ static void ICACHE_FLASH_ATTR _network_check_ip(void) {
 
 static inline void _network_update_state(enum network_state state) {
     network_state = state;
+    if (network_state == NETWORK_STATE_UP) {
+        node_update_state(NODE_STATE_NETWORK_CONNECTED);
+    }
 }

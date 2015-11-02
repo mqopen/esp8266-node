@@ -17,5 +17,25 @@
 
 #include <c_types.h>
 #include "node.h"
+#include "user_config.h"
 
-enum node_state node_current_state = NODE_STATE_AP_ASSOCIATING;
+enum node_state node_current_state;
+
+os_event_t node_proc_task_queue[CONFIG_PROC_TASK_QUEUE_LENGTH];
+
+void ICACHE_FLASH_ATTR node_init(void) {
+    system_os_task(node_process_state,
+                    NODE_PROCESS_TASK_PRIORITY,
+                    node_proc_task_queue,
+                    CONFIG_PROC_TASK_QUEUE_LENGTH);
+}
+
+void ICACHE_FLASH_ATTR node_update_state(enum node_state state) {
+    node_current_state = state;
+    system_os_post(NODE_PROCESS_TASK_PRIORITY, 0, 0);
+}
+
+void ICACHE_FLASH_ATTR node_process_state(os_event_t *events) {
+    switch (node_current_state) {
+    }
+}

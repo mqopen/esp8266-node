@@ -61,17 +61,17 @@
  * Calibration data readed at start-up.
  */
 struct bmp180_calibration_data {
-    int16_t ac1;
-    int16_t ac2;
-    int16_t ac3;
-    uint16_t ac4;
-    uint16_t ac5;
-    uint16_t ac6;
-    int16_t b1;
-    int16_t b2;
-    int16_t mb;
-    int16_t mc;
-    int16_t md;
+    int16_t ac1;                    /**< AC1 */
+    int16_t ac2;                    /**< AC2 */
+    int16_t ac3;                    /**< AC3 */
+    uint16_t ac4;                   /**< AC4 */
+    uint16_t ac5;                   /**< AC5 */
+    uint16_t ac6;                   /**< AC6 */
+    int16_t b1;                     /**< B1 */
+    int16_t b2;                     /**< B2 */
+    int16_t mb;                     /**< MB */
+    int16_t mc;                     /**< MC */
+    int16_t md;                     /**< MD */
 };
 
 /**
@@ -85,13 +85,13 @@ enum bmp180_read_status {
 };
 
 /**
- * Possible oss levels.
+ * Over Sampling ratios of pressure measurements.
  */
 enum bmp180_pressure_oss {
-    BMP180_OSS_SINGLE = 0,
-    BMP180_OSS_2 = 1,
-    BMP180_OSS_4 = 2,
-    BMP180_OSS_8 = 3,
+    BMP180_OSS_SINGLE = 0,      /**< Single. */
+    BMP180_OSS_2 = 1,           /**< 2 times. */
+    BMP180_OSS_4 = 2,           /**< 4 times. */
+    BMP180_OSS_8 = 3,           /**< 8 times. */
 };
 
 /**
@@ -102,11 +102,36 @@ struct bmp180_data {
     uint32_t pressure;              /**< Pressure in Pa. */
 };
 
+/**
+ * Data of last measurement.
+ */
 extern struct bmp180_data bmp180_data;
 
+/**
+ * Initiate the sensor.
+ */
 void ICACHE_FLASH_ATTR bmp180_init(void);
+
+/**
+ * Get chip ID.
+ *
+ * @return Chip ID.
+ */
 uint8_t ICACHE_FLASH_ATTR bmp180_get_chip_id(void);
+
+/**
+ * Test working communincation with the chip.
+ *
+ * @return True if success, false otherwise.
+ */
 bool ICACHE_FLASH_ATTR bmp180_test(void);
+
+/**
+ * Read measurement.
+ *
+ * @param oss OSS of preassure measurement.
+ * @return Result of read operation.
+ */
 enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss oss);
 
 #endif
