@@ -45,6 +45,9 @@ static struct station_config station_config = {
     .password = CONFIG_WIFI_PASSWORD,
 };
 
+/**
+ * Check for ip connectivity.
+ */
 static os_timer_t _ip_check_timer;
 
 /* Static function prototypes. */
@@ -62,6 +65,8 @@ static inline void _network_update_state(enum network_state state);
 /* Implementation. */
 
 void ICACHE_FLASH_ATTR network_init(void) {
+    wifi_set_opmode_current(STATION_MODE);
+    wifi_station_set_config_current(&station_config);
     _network_update_state(NETWORK_STATE_INIT);
     _network_config_address();
     _network_init_timer();
@@ -96,8 +101,6 @@ static void ICACHE_FLASH_ATTR _network_init_timer(void) {
 }
 
 void ICACHE_FLASH_ATTR network_connect(void) {
-    wifi_set_opmode_current(STATION_MODE);
-    wifi_station_set_config_current(&station_config);
     wifi_station_connect();
 }
 

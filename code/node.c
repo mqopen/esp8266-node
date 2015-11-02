@@ -16,8 +16,9 @@
  */
 
 #include <c_types.h>
-#include "node.h"
 #include "user_config.h"
+#include "mqttclient.h"
+#include "node.h"
 
 enum node_state node_current_state;
 
@@ -37,5 +38,10 @@ void ICACHE_FLASH_ATTR node_update_state(enum node_state state) {
 
 void ICACHE_FLASH_ATTR node_process_state(os_event_t *events) {
     switch (node_current_state) {
+        case NODE_STATE_NETWORK_CONNECTED:
+            mqttclient_start();
+            break;
+        default:
+            break;
     }
 }
