@@ -38,6 +38,9 @@ void ICACHE_FLASH_ATTR node_update_state(enum node_state state) {
 
 void ICACHE_FLASH_ATTR node_process_state(os_event_t *events) {
     switch (node_current_state) {
+        case NODE_STATE_NETWORK_DISCONNECTED:
+            mqttclient_stop();
+            break;
         case NODE_STATE_NETWORK_CONNECTED:
             mqttclient_start();
             break;

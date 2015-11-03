@@ -45,15 +45,9 @@ static struct station_config station_config = {
     .password = CONFIG_WIFI_PASSWORD,
 };
 
-/**
- * Check for ip connectivity.
- */
-static os_timer_t _ip_check_timer;
-
 /* Static function prototypes. */
 static void ICACHE_FLASH_ATTR _network_config_address(void);
-static void ICACHE_FLASH_ATTR _network_check_ip(void);
-static void ICACHE_FLASH_ATTR _network_init_timer(void);
+static void ICACHE_FLASH_ATTR _network_wifi_event_callback(System_Event_t *event);
 
 /**
  * Update network state.
@@ -65,11 +59,8 @@ static inline void _network_update_state(enum network_state state);
 /* Implementation. */
 
 void ICACHE_FLASH_ATTR network_init(void) {
-    wifi_set_opmode_current(STATION_MODE);
-    wifi_station_set_config_current(&station_config);
-    _network_update_state(NETWORK_STATE_INIT);
+    wifi_set_event_handler_cb(_network_wifi_event_callback);
     _network_config_address();
-    _network_init_timer();
 }
 
 static void ICACHE_FLASH_ATTR _network_config_address(void) {
@@ -90,36 +81,34 @@ static void ICACHE_FLASH_ATTR _network_config_address(void) {
                                 CONFIG_CLIENT_IP_NETMASK2,
                                 CONFIG_CLIENT_IP_NETMASK3);
     wifi_set_ip_info(STATION_IF, &ip_info);
+    _network_update_state(NETWORK_STATE_UP);
 #endif
 }
 
-static void ICACHE_FLASH_ATTR _network_init_timer(void) {
-    /* IP address timer. */
-    os_timer_disarm(&_ip_check_timer);
-    os_timer_setfn(&_ip_check_timer, (os_timer_func_t *) _network_check_ip, NULL);
-    os_timer_arm(&_ip_check_timer, 1000, 0);
-}
-
 void ICACHE_FLASH_ATTR network_connect(void) {
+    wifi_set_opmode_current(STATION_MODE);
+    wifi_station_set_config_current(&station_config);
     wifi_station_connect();
 }
 
-static void ICACHE_FLASH_ATTR _network_check_ip(void) {
-    struct ip_info ipconfig;
-    os_timer_disarm(&_ip_check_timer);
-    wifi_get_ip_info(STATION_IF, &ipconfig);
-    if (wifi_station_get_connect_status() == STATION_GOT_IP && ipconfig.ip.addr != 0) {
-        _network_update_state(NETWORK_STATE_UP);
-        system_os_post(CONFIG_PROCESS_TASK_PRIORITY, 0, 0);
-    } else {
-        os_timer_setfn(&_ip_check_timer, (os_timer_func_t *) _network_check_ip, NULL);
-        os_timer_arm(&_ip_check_timer, 1000, 0);
-    }
-}
-
 static inline void _network_update_state(enum network_state state) {
+    enum network_state previous_state = network_state;
     network_state = state;
     if (network_state == NETWORK_STATE_UP) {
         node_update_state(NODE_STATE_NETWORK_CONNECTED);
+    } else if (previous_state == NETWORK_STATE_UP) {
+        node_update_state(NODE_STATE_NETWORK_DISCONNECTED);
+    }
+}
+
+static void ICACHE_FLASH_ATTR _network_wifi_event_callback(System_Event_t *event) {
+    switch (event->event) {
+        case EVENT_STAMODE_CONNECTED:
+            _network_update_state(NETWORK_STATE_UP);
+            break;
+        case EVENT_STAMODE_DISCONNECTED:
+            _network_update_state(NETWORK_STATE_AP_ASSOCIATING);
+            node_update_state(NODE_STATE_NETWORK_DISCONNECTED);
+            break;
     }
 }

@@ -207,9 +207,9 @@ static inline void _mqttclient_schedule_reconnect(void);
 static void ICACHE_FLASH_ATTR _mqttclient_data_send(void);
 
 /**
- * Handle disconnect from MQTT broker.
+ * Stop communication with MQTT broker.
  */
-static void ICACHE_FLASH_ATTR _mqttclient_handle_broker_disconnect(void);
+static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void);
 
 void ICACHE_FLASH_ATTR mqttclient_init(void) {
 
@@ -232,6 +232,11 @@ void ICACHE_FLASH_ATTR mqttclient_init(void) {
 
 void ICACHE_FLASH_ATTR mqttclient_start(void) {
     _mqttclient_create_connection();
+}
+
+void ICACHE_FLASH_ATTR mqttclient_stop(void) {
+    _mqttclient_stop_communication();
+    espconn_disconnect(&_mqttclient_espconn);
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
@@ -264,7 +269,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_connect_callback(void *arg) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_reconnect_callback(void *arg, sint8 err) {
-    _mqttclient_handle_broker_disconnect();
+    _mqttclient_stop_communication();
     os_printf("Reconnect\r\n");
     switch (err) {
         case ESPCONN_TIMEOUT:
@@ -301,11 +306,11 @@ static void ICACHE_FLASH_ATTR _mqttclient_reconnect_callback(void *arg, sint8 er
 
 static void ICACHE_FLASH_ATTR _mqttclient_disconnect_callback(void *arg) {
     os_printf("Disconnect\r\n");
-    _mqttclient_handle_broker_disconnect();
+    _mqttclient_stop_communication();
     _mqttclient_schedule_reconnect();
 }
 
-static void ICACHE_FLASH_ATTR _mqttclient_handle_broker_disconnect(void) {
+static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void) {
     _mqttclient_stop_mqtt_timers();
     _mqttclient_led_off();
 }

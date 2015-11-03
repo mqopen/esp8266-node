@@ -29,6 +29,7 @@
 enum node_state {
     NODE_STATE_INIT,                    /** */
     NODE_STATE_NETWORK_CONNECTED,
+    NODE_STATE_NETWORK_DISCONNECTED,
     NODE_STATE_BROKER_OPERATIONAL,
     //NODE_STATE_AP_ASSOCIATING,      /**< Node is associating with the access point. */
     //NODE_STATE_BROKER_CONNECTING,   /**< Node is connecting to broker. */

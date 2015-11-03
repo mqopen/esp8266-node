@@ -43,8 +43,10 @@ void ICACHE_FLASH_ATTR mqttclient_init(void);
  * Start MQTT client main logic.
  */
 void ICACHE_FLASH_ATTR mqttclient_start(void);
-//void mqttclient_notify_broker_unreachable(void);
-//void mqttclient_process(void);
-//void mqttclient_appcall(void);
+
+/**
+ * Stop MQTT client
+ */
+void ICACHE_FLASH_ATTR mqttclient_stop(void);
 
 #endif
