@@ -81,7 +81,6 @@ static void ICACHE_FLASH_ATTR _network_config_address(void) {
                                 CONFIG_CLIENT_IP_NETMASK2,
                                 CONFIG_CLIENT_IP_NETMASK3);
     wifi_set_ip_info(STATION_IF, &ip_info);
-    _network_update_state(NETWORK_STATE_UP);
 #endif
 }
 
@@ -104,11 +103,14 @@ static inline void _network_update_state(enum network_state state) {
 static void ICACHE_FLASH_ATTR _network_wifi_event_callback(System_Event_t *event) {
     switch (event->event) {
         case EVENT_STAMODE_CONNECTED:
+#if CONFIG_USE_DHCP
+#error "Not implemented yet"
+#else
             _network_update_state(NETWORK_STATE_UP);
+#endif
             break;
         case EVENT_STAMODE_DISCONNECTED:
             _network_update_state(NETWORK_STATE_AP_ASSOCIATING);
-            node_update_state(NODE_STATE_NETWORK_DISCONNECTED);
             break;
     }
 }

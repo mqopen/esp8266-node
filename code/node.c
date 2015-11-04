@@ -20,6 +20,8 @@
 #include "mqttclient.h"
 #include "node.h"
 
+#include <osapi.h>
+
 enum node_state node_current_state;
 
 os_event_t node_proc_task_queue[CONFIG_PROC_TASK_QUEUE_LENGTH];
@@ -39,9 +41,11 @@ void ICACHE_FLASH_ATTR node_update_state(enum node_state state) {
 void ICACHE_FLASH_ATTR node_process_state(os_event_t *events) {
     switch (node_current_state) {
         case NODE_STATE_NETWORK_DISCONNECTED:
+            os_printf("node is down\r\n");
             mqttclient_stop();
             break;
         case NODE_STATE_NETWORK_CONNECTED:
+            os_printf("node is up\r\n");
             mqttclient_start();
             break;
         default:
