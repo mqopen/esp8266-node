@@ -22,8 +22,8 @@
 #include <user_interface.h>
 #include <osapi.h>
 #include "user_config.h"
-#include "gpio16.h"
 #include "umqtt.h"
+#include "actsig.h"
 #include "bmp180.h"
 #include "mqttclient.h"
 
@@ -38,21 +38,19 @@ static os_timer_t _keep_alive_timer;
 static os_timer_t  _publish_timer;
 
 /**
- * Blinking with LED.
- */
-static os_timer_t  _led_blink_timer;
-
-/**
- * Activity LED indicator state.
- */
-static bool _active_led_state;
-
-static bool _active_led_blinking = false;
-
-/**
  * Timer for limit reconnect attempts.
  */
 static os_timer_t _reconnect_timer;
+
+/**
+ * Keep track if MQTT client is running.
+ */
+static bool _is_running = false;
+
+/**
+ * Signal network activity.
+ */
+struct actsig_signal _activity_signal;
 
 /**
  * TCP connection.
@@ -167,31 +165,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_start_mqtt_timers(void);
 static void ICACHE_FLASH_ATTR _mqttclient_stop_mqtt_timers(void);
 
 /**
- * Turn active LED on.
- */
-static inline void _mqttclient_led_on(void);
-
-/**
- * Turn active LED off.
- */
-static inline void _mqttclient_led_off(void);
-
-/**
- * Blink with actived LED.
- */
-static void ICACHE_FLASH_ATTR _mqttclient_led_active_blink(void);
-
-/**
- * Toggle active LED.
- */
-static void ICACHE_FLASH_ATTR _mqttclient_led_toggle(void);
-
-/**
- * Blinking with active LED. Called from timer.
- */
-static void ICACHE_FLASH_ATTR _mqttclient_led_blink_off(void);
-
-/**
  * Perform reconnect attempt. Called from reconnect timer.
  */
 static void ICACHE_FLASH_ATTR _mqttclient_do_reconnect(void);
@@ -216,19 +189,17 @@ static void ICACHE_FLASH_ATTR _mqttclient_reset_buffers(void);
 void ICACHE_FLASH_ATTR mqttclient_init(void) {
 
     /* Signalization LED. */
-    gpio16_output_conf();
-    _mqttclient_led_off();
+    actsig_init(&_activity_signal, CONFIG_MQTT_ACTIVE_LED_INTERVAL_MS);
+    actsig_set_normal_off(&_activity_signal);
 
     /* Initiate timers. */
     os_timer_disarm(&_keep_alive_timer);
     os_timer_disarm(&_publish_timer);
-    os_timer_disarm(&_led_blink_timer);
     os_timer_disarm(&_reconnect_timer);
 
     /* Assign functions for timers. */
     os_timer_setfn(&_keep_alive_timer, (os_timer_func_t *) _mqttclient_umqtt_keep_alive, NULL);
     os_timer_setfn(&_publish_timer, (os_timer_func_t *) _mqttclient_publish, NULL);
-    os_timer_setfn(&_led_blink_timer, (os_timer_func_t *) _mqttclient_led_blink_off, NULL);
     os_timer_setfn(&_reconnect_timer, (os_timer_func_t *) _mqttclient_do_reconnect, NULL);
 
     umqtt_init(&_mqtt);
@@ -236,10 +207,12 @@ void ICACHE_FLASH_ATTR mqttclient_init(void) {
 }
 
 void ICACHE_FLASH_ATTR mqttclient_start(void) {
+    _is_running = true;
     _mqttclient_create_connection();
 }
 
 void ICACHE_FLASH_ATTR mqttclient_stop(void) {
+    _is_running = false;
     _mqttclient_stop_communication();
     espconn_disconnect(&_mqttclient_espconn);
     if (espconn_delete(&_mqttclient_espconn)) {
@@ -272,7 +245,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_connect_callback(void *arg) {
     os_printf("Connected\r\n");
     espconn_regist_sentcb(&_mqttclient_espconn, _mqttclient_data_sent);
     espconn_regist_recvcb(&_mqttclient_espconn, _mqttclient_data_received);
-    _mqttclient_led_on();
+    actsig_set_normal_on(&_activity_signal);
     _mqttclient_broker_connect();
     _mqttclient_start_mqtt_timers();
 }
@@ -317,17 +290,18 @@ static void ICACHE_FLASH_ATTR _mqttclient_disconnect_callback(void *arg) {
     os_printf("Disconnect\r\n");
     _mqttclient_reset_buffers();
     _message_sending = false;
-    //_mqttclient_schedule_reconnect();
+    if (_is_running)
+        _mqttclient_schedule_reconnect();
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void) {
     _mqttclient_stop_mqtt_timers();
-    _mqttclient_led_off();
+    actsig_set_normal_off(&_activity_signal);
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_write_finish_fn(void *arg) {
     os_printf("Write finish\r\n");
-    _mqttclient_led_off();
+    actsig_set_normal_off(&_activity_signal);
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, unsigned short len) {
@@ -382,39 +356,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_send(void) {
         if (len) {
             espconn_send(&_mqttclient_espconn, _rx_buf, len);
             _message_sending = true;
-            _mqttclient_led_active_blink();
+            actsig_notify(&_activity_signal);
         }
-    }
-}
-
-static inline void _mqttclient_led_on(void) {
-    gpio16_output_set(0);
-    _active_led_state = true;
-}
-
-static inline void _mqttclient_led_off(void) {
-    gpio16_output_set(1);
-    _active_led_state = false;
-}
-
-static void ICACHE_FLASH_ATTR _mqttclient_led_active_blink(void) {
-    if (!_active_led_blinking) {
-        _active_led_blinking = true;
-        _mqttclient_led_toggle();
-        os_timer_arm(&_led_blink_timer, CONFIG_MQTT_ACTIVE_LED_INTERVAL_MS, 0);
-    }
-}
-
-static void ICACHE_FLASH_ATTR _mqttclient_led_blink_off(void) {
-    _active_led_blinking = false;
-    _mqttclient_led_toggle();
-}
-
-static void ICACHE_FLASH_ATTR _mqttclient_led_toggle(void) {
-    if (_active_led_state) {
-        _mqttclient_led_off();
-    } else {
-        _mqttclient_led_on();
     }
 }
 
