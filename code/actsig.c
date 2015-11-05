@@ -21,10 +21,37 @@
 #include "actsig.h"
 
 /* Static function prototypes. */
+
+/**
+ * Handle scheduled signal timer.
+ *
+ * @param arg Signal object.
+ */
 static void ICACHE_FLASH_ATTR _actsig_handle_timer(void *arg);
+
+/**
+ * Toggle signal. Modify is_signaling attribute of signal object AFTER calling this
+ * routine.
+ *
+ * @param signal Signal object.
+ */
 static void ICACHE_FLASH_ATTR _actsig_toggle(struct actsig_signal *signal);
+
+/**
+ * Turn signal on.
+ *
+ * @param signal Signal object.
+ */
 static void ICACHE_FLASH_ATTR _actsig_turn_on(struct actsig_signal *signal);
+
+/**
+ * Turn signal off.
+ *
+ * @param signal Signal object.
+ */
 static void ICACHE_FLASH_ATTR _actsig_turn_off(struct actsig_signal *signal);
+
+/* Implementation. */
 
 void ICACHE_FLASH_ATTR actsig_init(struct actsig_signal *signal, uint32_t period) {
     signal->period = period;

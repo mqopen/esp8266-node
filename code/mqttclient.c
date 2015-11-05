@@ -289,6 +289,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_reconnect_callback(void *arg, sint8 er
 static void ICACHE_FLASH_ATTR _mqttclient_disconnect_callback(void *arg) {
     os_printf("Disconnect\r\n");
     _mqttclient_reset_buffers();
+    _mqttclient_stop_communication();
     _message_sending = false;
     if (_is_running)
         _mqttclient_schedule_reconnect();

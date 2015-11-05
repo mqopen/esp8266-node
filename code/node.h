@@ -19,7 +19,6 @@
 #define __NODE_H__
 
 #include <c_types.h>
-#include <os_type.h>
 
 #define NODE_PROCESS_TASK_PRIORITY  0
 
@@ -27,15 +26,15 @@
  * Possible node states.
  */
 enum node_state {
-    NODE_STATE_INIT,                    /** */
-    NODE_STATE_NETWORK_CONNECTED,
-    NODE_STATE_NETWORK_DISCONNECTED,
-    NODE_STATE_BROKER_OPERATIONAL,
-    //NODE_STATE_AP_ASSOCIATING,      /**< Node is associating with the access point. */
-    //NODE_STATE_BROKER_CONNECTING,   /**< Node is connecting to broker. */
-    //NODE_STATE_OPERATIONAL,         /**< Node is connected to MQTT broker and ready to transmit data. */
+    NODE_STATE_INIT,                    /** Node init phase. */
+    NODE_STATE_NETWORK_CONNECTED,       /** Node is connected to AP. */
+    NODE_STATE_NETWORK_DISCONNECTED,    /** Node is disconnected from AP. */
+    NODE_STATE_BROKER_OPERATIONAL,      /** MQTT client is up and running. */
 };
 
+/**
+ * Current node state.
+ */
 extern enum node_state node_current_state;
 
 /**
@@ -49,10 +48,5 @@ void ICACHE_FLASH_ATTR node_init(void);
  * @param state
  */
 void ICACHE_FLASH_ATTR node_update_state(enum node_state state);
-
-/**
- * Process new state.
- */
-void ICACHE_FLASH_ATTR node_process_state(os_event_t *events);
 
 #endif

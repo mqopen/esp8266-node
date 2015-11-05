@@ -21,16 +21,43 @@
 #include <stdbool.h>
 #include <os_type.h>
 
+/**
+ * Signal object.
+ */
 struct actsig_signal {
-    uint32_t period;
-    bool is_signaling;
-    bool normal_state;
-    os_timer_t signal_timer;
+    uint32_t period;            /**< Signal period. */
+    bool is_signaling;          /**< Is signal currenly in signaling state. */
+    bool normal_state;          /**< Normal signal state. */
+    os_timer_t signal_timer;    /**< Signaling timer. */
 };
 
+/**
+ * Initiate signal object.
+ *
+ * @param signal Signal object.
+ * @param period Signaling period.
+ */
 void ICACHE_FLASH_ATTR actsig_init(struct actsig_signal *signal, uint32_t period);
+
+/**
+ * Notif signal.
+ *
+ * @param signal Signal object.
+ */
 void ICACHE_FLASH_ATTR actsig_notify(struct actsig_signal *signal);
+
+/**
+ * Set signal normal state to on.
+ *
+ * @param signal Signal object.
+ */
 void ICACHE_FLASH_ATTR actsig_set_normal_on(struct actsig_signal *signal);
+
+/**
+ * Set signal normal state to off.
+ *
+ * @param signal Signal object.
+ */
 void ICACHE_FLASH_ATTR actsig_set_normal_off(struct actsig_signal *signal);
 
 #endif
