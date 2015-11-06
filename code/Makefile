@@ -2,7 +2,7 @@ CROSS := xtensa-lx106-elf-
 CC := $(CROSS)gcc
 LD := $(CROSS)gcc
 CFLAGS = -Wall -Wno-implicit-function-declaration -I. -mlongcalls -Os -DICACHE_FLASH
-LDLIBS = -nostdlib -Wl,--start-group -lmain -lnet80211 -lwpa -llwip -lpp -lphy  -Wl,--end-group -lgcc
+LDLIBS = -nostdlib -Wl,--start-group -lmain -lnet80211 -lwpa -llwip -lpp -lphy -Wl,--end-group -lgcc
 LDFLAGS = -Teagle.app.v6.ld -Os -Wl,-static
 
 CSRC = main.c uart.c gpio16.c network.c node.c umqtt.c mqttclient.c i2c_master.c bmp180.c actsig.c

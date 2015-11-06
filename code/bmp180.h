@@ -88,10 +88,10 @@ enum bmp180_read_status {
  * Over Sampling ratios of pressure measurements.
  */
 enum bmp180_pressure_oss {
-    BMP180_OSS_SINGLE = 0,      /**< Single. */
-    BMP180_OSS_2 = 1,           /**< 2 times. */
-    BMP180_OSS_4 = 2,           /**< 4 times. */
-    BMP180_OSS_8 = 3,           /**< 8 times. */
+    BMP180_OSS_SINGLE   = 0,    /**< Single. */
+    BMP180_OSS_2        = 1,    /**< 2 times. */
+    BMP180_OSS_4        = 2,    /**< 4 times. */
+    BMP180_OSS_8        = 3,    /**< 8 times. */
 };
 
 /**
