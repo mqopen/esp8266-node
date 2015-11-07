@@ -20,6 +20,9 @@
 
 #include <c_types.h>
 
+/**
+ * Main task priority.
+ */
 #define NODE_PROCESS_TASK_PRIORITY  0
 
 /**

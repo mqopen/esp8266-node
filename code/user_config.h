@@ -18,9 +18,11 @@
 #ifndef __USER_CONFIG_H__
 #define __USER_CONFIG_H__
 
+/** Wi-Fi configuration. */
 #define CONFIG_WIFI_SSID        "hostapd"
 #define CONFIG_WIFI_PASSWORD    "password"
 
+/** Sensor IP. */
 #define CONFIG_USE_DHCP             0
 #if ! CONFIG_USE_DHCP
 #define CONFIG_CLIENT_IP_ADDRESS0   192
@@ -39,6 +41,7 @@
 #define CONFIG_CLIENT_IP_GATEWAY3   1
 #endif
 
+/** Broker IP. */
 #define CONFIG_MQTT_BROKER_IP_ADDRESS0  192
 #define CONFIG_MQTT_BROKER_IP_ADDRESS1  168
 #define CONFIG_MQTT_BROKER_IP_ADDRESS2  10
@@ -47,15 +50,20 @@
 
 #define CONFIG_PROC_TASK_QUEUE_LENGTH   1
 
+/** MQTT mesaage timing. */
 #define CONFIG_MQTT_KEEP_ALIVE_INTERVAL_MS  30000
 #define CONFIG_MQTT_PUBLISH_INTERVAL_MS     2000
 
 #define CONFIG_MQTT_KEEP_ALIVE          60
+
+/** MQTT client ID. */
 #define CONFIG_MQTT_CLIENT_ID           "esp8266-broker"
 
+/** Topics for temperature and pressure. */
 #define CONFIG_MQTT_TOPIC_TEMPERATURE   "test/temperature"
 #define CONFIG_MQTT_TOPIC_PRESSURE      "test/pressure"
 
+/** LED notify interval. */
 #define CONFIG_MQTT_ACTIVE_LED_INTERVAL_MS  100
 
 #endif
