@@ -20,6 +20,9 @@
 #include "i2c_master.h"
 #include "bmp180.h"
 
+/**
+ * Sensor calibration.
+ */
 struct bmp180_calibration_data _bmp180_calibration;
 
 struct bmp180_data bmp180_data;
@@ -49,6 +52,11 @@ static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_up(int32_t *up, en
  */
 static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read(uint8_t reg, uint8_t *value);
 
+/**
+ * Loop until measurement is available.
+ *
+ * @return Status of read operation.
+ */
 static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_loop_measured(void);
 
 /**
