@@ -75,13 +75,14 @@ struct bmp180_calibration_data {
 };
 
 /**
- * Sensor read status.
+ * Result of I2C IO operation.
  */
-enum bmp180_read_status {
-    BMP180_READ_STATUS_OK,
-    BMP180_READ_STATUS_WRITE_ADDRESS_ERROR,
-    BMP180_READ_STATUS_WRITE_REGISTER_ERROR,
-    BMP180_READ_STATUS_READ_ADDRESS_ERROR,
+enum bmp180_io_result {
+    BMP180_IO_OK,                       /**< Communication is OK. */
+    BMP180_IO_WRITE_ADDRESS_ERROR,      /**< Write address not acknowledged. */
+    BMP180_IO_WRITE_REGISTER_ERROR,     /**< Write of destination register not acknowledged. */
+    BMP180_IO_WRITE_VALUE_ERROR,        /**< Write of register value not acknowledged (Write operation only). */
+    BMP180_IO_READ_ADDRESS_ERROR,       /**< Read address not acknowledged. */
 };
 
 /**
@@ -132,6 +133,6 @@ bool ICACHE_FLASH_ATTR bmp180_test(void);
  * @param oss OSS of preassure measurement.
  * @return Result of read operation.
  */
-enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss oss);
+enum bmp180_io_result ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss oss);
 
 #endif

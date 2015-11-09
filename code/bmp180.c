@@ -35,7 +35,7 @@ struct bmp180_data bmp180_data;
  * @param ut Pointer to memory where UT will be stored.
  * @return Result of read operation.
  */
-static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_ut(int32_t *ut);
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_read_ut(int32_t *ut);
 
 /**
  * Read uncalibrated pressure.
@@ -43,21 +43,25 @@ static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_ut(int32_t *ut);
  * @param up Pointer to memory where UP will be stored.
  * @return Result of read operation.
  */
-static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_up(int32_t *up, enum bmp180_pressure_oss oss);
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_read_up(int32_t *up, enum bmp180_pressure_oss oss);
 
 /**
  * Read value from the register.
  *
  * @return Result of read operation.
+ *      BMP180_IO_OK if communication is OK.
+ *      BMP180_IO_WRITE_ADDRESS_ERROR when I2C write address is not acknowledged.
+ *      BMP180_IO_WRITE_REGISTER_ERROR when device read register address is not acknowledged.
+ *      BMP180_IO_READ_ADDRESS_ERROR when I2C read address is not acknowledged.
  */
-static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read(uint8_t reg, uint8_t *value);
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_read(uint8_t reg, uint8_t *value);
 
 /**
- * Loop until measurement is available.
+ * Loop until measurement conversion is complete.
  *
  * @return Status of read operation.
  */
-static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_loop_measured(void);
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_loop_sco(void);
 
 /**
  * Read two byte value from two reisters.
@@ -66,16 +70,20 @@ static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_loop_measured(void);
  * @param lsb Address of LSB register.
  * @return Result of read operation.
  */
-static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_short(uint8_t msb, uint8_t lsb, uint16_t *value);
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_read_short(uint8_t msb, uint8_t lsb, uint16_t *value);
 
 /**
  * Write to chip.
  *
  * @param address
  * @param value
- * @return
+ * @return Result of write operation.
+ *      BMP180_IO_OK if communication is OK.
+ *      BMP180_IO_WRITE_ADDRESS_ERROR if I2C write address is not acknowledged.
+ *      BMP180_IO_WRITE_REGISTER_ERROR if device write register address is not acknowledged.
+ *      BMP180_IO_WRITE_VALUE_ERROR if device register value is not acknowledged.
  */
-static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_write(uint8_t address, uint8_t value);
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_write(uint8_t address, uint8_t value);
 
 /**
  * Init calibration.
@@ -96,9 +104,9 @@ bool ICACHE_FLASH_ATTR bmp180_test(void) {
     return bmp180_get_chip_id() == BMP180_CHIP_ID;
 }
 
-enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss oss) {
+enum bmp180_io_result ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss oss) {
     /* Read temperature. */
-    int32_t _ut;
+    int32_t _ut = 0;
     int32_t _up = 0;
     int32_t _x1;
     int32_t _x2;
@@ -111,21 +119,21 @@ enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss o
     int32_t _t;
     int32_t _p;
 
-    enum bmp180_read_status _status;
-    _status = _bmp180_read_ut(&_ut);
-    if (_status == BMP180_READ_STATUS_OK) {
+    enum bmp180_io_result _io_result;
+    _io_result = _bmp180_read_ut(&_ut);
+    if (_io_result == BMP180_IO_OK) {
         _x1 = ((_ut - _bmp180_calibration.ac6) * _bmp180_calibration.ac5) >> 15;
         _x2 = (_bmp180_calibration.mc << 11) / (_x1 + _bmp180_calibration.md);
         _b5 = _x1 + _x2;
         _t = (_b5 + 8) >> 4;
         bmp180_data.temperature = _t * 100;
     } else {
-        return _status;
+        return _io_result;
     }
 
     /* Read pressure. */
-    _status = _bmp180_read_up(&_up, oss);
-    if (_status == BMP180_READ_STATUS_OK) {
+    _io_result = _bmp180_read_up(&_up, oss);
+    if (_io_result == BMP180_IO_OK) {
         os_printf("UP: %d\r\n", _up);
         _b6 = _b5 - 4000;
         os_printf("B6: %d\r\n", _b6);
@@ -164,7 +172,7 @@ enum bmp180_read_status ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss o
         os_printf("  ----------------------  \r\n");
         bmp180_data.pressure = _p;
     }
-    return _status;
+    return _io_result;
 }
 
 static void ICACHE_FLASH_ATTR _bmp180_init_calibration(void) {
@@ -193,102 +201,109 @@ static void ICACHE_FLASH_ATTR _bmp180_init_calibration(void) {
     os_printf("MD: %d\r\n", _bmp180_calibration.md);
 }
 
-static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_ut(int32_t *ut) {
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_read_ut(int32_t *ut) {
     uint16_t _ut16;
     _bmp180_write(BMP180_REGISTER_CTRL_MEAS, _BV(BMP180_SCO) | 0x0e);
-    enum bmp180_read_status _status =_bmp180_read_short(BMP180_OUT_MSB, BMP180_OUT_LSB, &_ut16);
-    if (_status == BMP180_READ_STATUS_OK) {
+    enum bmp180_io_result _io_result = _bmp180_loop_sco();
+    if (_io_result != BMP180_IO_OK)
+        return _io_result;
+    _io_result =_bmp180_read_short(BMP180_OUT_MSB, BMP180_OUT_LSB, &_ut16);
+    if (_io_result == BMP180_IO_OK)
         *ut = _ut16;
-    }
-    return _status;
+    return _io_result;
 }
 
-static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_up(int32_t *up, enum bmp180_pressure_oss oss) {
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_read_up(int32_t *up, enum bmp180_pressure_oss oss) {
     uint8_t _up_msb;
     uint8_t _up_lsb;
     uint8_t _up_xlsb;
-    enum bmp180_read_status _status;
+    enum bmp180_io_result _io_result;
     _bmp180_write(BMP180_REGISTER_CTRL_MEAS, (uint8_t) (0x34 | (oss << BMP180_OSS_SHIFT)));
-    _status =_bmp180_read(BMP180_OUT_MSB, &_up_msb);
-    if (_status != BMP180_READ_STATUS_OK)
-        return _status;
-    _status =_bmp180_read(BMP180_OUT_LSB, &_up_lsb);
-    if (_status != BMP180_READ_STATUS_OK)
-        return _status;
-    _status = _bmp180_read(BMP180_OUT_XLSB, &_up_xlsb);
-    if (_status != BMP180_READ_STATUS_OK)
-        return _status;
+    _io_result = _bmp180_loop_sco();
+    if (_io_result != BMP180_IO_OK)
+        return _io_result;
+    _io_result =_bmp180_read(BMP180_OUT_MSB, &_up_msb);
+    if (_io_result != BMP180_IO_OK)
+        return _io_result;
+    _io_result =_bmp180_read(BMP180_OUT_LSB, &_up_lsb);
+    if (_io_result != BMP180_IO_OK)
+        return _io_result;
+    _io_result = _bmp180_read(BMP180_OUT_XLSB, &_up_xlsb);
+    if (_io_result != BMP180_IO_OK)
+        return _io_result;
     *up = ((_up_msb << 16) | (_up_lsb << 8) | _up_xlsb) >> (8 - oss);
-    return _status;
+    return _io_result;
 }
 
-static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read_short(uint8_t msb, uint8_t lsb, uint16_t *value) {
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_read_short(uint8_t msb, uint8_t lsb, uint16_t *value) {
     uint8_t _msb;
     uint8_t _lsb;
-    uint8_t _ctl_meas;
-    enum bmp180_read_status status;
-
-    /* Wait until measurement is done. */
-    do {
-        status = _bmp180_read(BMP180_REGISTER_CTRL_MEAS, &_ctl_meas);
-        if (status != BMP180_READ_STATUS_OK)
-            return status;
-    } while (_ctl_meas & _BV(BMP180_SCO));
-
-    status = _bmp180_read(msb, &_msb);
-    if (status != BMP180_READ_STATUS_OK)
-        return status;
-    status = _bmp180_read(lsb, &_lsb);
-    if (status != BMP180_READ_STATUS_OK)
-        return status;
+    enum bmp180_io_result _io_result;
+    _io_result = _bmp180_read(msb, &_msb);
+    if (_io_result != BMP180_IO_OK)
+        return _io_result;
+    _io_result = _bmp180_read(lsb, &_lsb);
+    if (_io_result != BMP180_IO_OK)
+        return _io_result;
     *value = (_msb << 8) | _lsb;
-    return status;
+    return _io_result;
 }
 
-static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_read(uint8_t reg, uint8_t *value) {
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_read(uint8_t reg, uint8_t *value) {
     i2c_master_start();
     i2c_master_writeByte(BMP180_ADDRESS_WRITE);
     if (i2c_master_getAck()) {
-        return BMP180_READ_STATUS_WRITE_ADDRESS_ERROR;
+        return BMP180_IO_WRITE_ADDRESS_ERROR;
     }
 
     i2c_master_writeByte(reg);
     if (i2c_master_getAck()) {
-        return BMP180_READ_STATUS_WRITE_REGISTER_ERROR;
+        return BMP180_IO_WRITE_REGISTER_ERROR;
     }
     i2c_master_stop();
 
     i2c_master_start();
     i2c_master_writeByte(BMP180_ADDRESS_READ);
     if (i2c_master_getAck()) {
-        return BMP180_READ_STATUS_READ_ADDRESS_ERROR;
+        return BMP180_IO_READ_ADDRESS_ERROR;
     }
 
     *value = i2c_master_readByte();
     i2c_master_setAck(1);
 
     i2c_master_stop();
-    return BMP180_READ_STATUS_OK;
+    return BMP180_IO_OK;
 }
 
-static enum bmp180_read_status ICACHE_FLASH_ATTR _bmp180_write(uint8_t address, uint8_t value) {
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_write(uint8_t address, uint8_t value) {
     i2c_master_start();
     i2c_master_writeByte(BMP180_ADDRESS_WRITE);
     if (i2c_master_getAck()) {
-        return BMP180_READ_STATUS_WRITE_ADDRESS_ERROR;
+        return BMP180_IO_WRITE_ADDRESS_ERROR;
     }
 
     /* Control register. */
     i2c_master_writeByte(address);
     if (i2c_master_getAck()) {
-        return BMP180_READ_STATUS_WRITE_REGISTER_ERROR;
+        return BMP180_IO_WRITE_REGISTER_ERROR;
     }
 
     /* Set register value. */
     i2c_master_writeByte(value);
     if (i2c_master_getAck()) {
-        return BMP180_READ_STATUS_WRITE_REGISTER_ERROR;
+        return BMP180_IO_WRITE_VALUE_ERROR;
     }
     i2c_master_stop();
-    return BMP180_READ_STATUS_OK;
+    return BMP180_IO_OK;
+}
+
+static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_loop_sco(void) {
+    enum bmp180_io_result _io_result;
+    uint8_t _ctl_meas;
+    do {
+        _io_result = _bmp180_read(BMP180_REGISTER_CTRL_MEAS, &_ctl_meas);
+        if (_io_result != BMP180_IO_OK)
+            return _io_result;
+    } while (_ctl_meas & _BV(BMP180_SCO));
+    return _io_result;
 }

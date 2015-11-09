@@ -318,11 +318,11 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
 
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
     if (!_message_sending) {
-        enum bmp180_read_status status = bmp180_read(BMP180_OSS_8);
+        enum bmp180_io_result _io_result = bmp180_read(BMP180_OSS_8);
         // TODO: hardcoded constant
         char buf[20];
         uint16_t len;
-        if (status == BMP180_READ_STATUS_OK) {
+        if (_io_result == BMP180_IO_OK) {
             len = os_sprintf(buf, "%d.%d", bmp180_data.temperature / 1000, bmp180_data.temperature % 1000);
             umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_TEMPERATURE, (uint8_t *) buf, len);
             len = os_sprintf(buf, "%d", bmp180_data.pressure);
