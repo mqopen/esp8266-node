@@ -67,8 +67,7 @@ static struct espconn _mqttclient_espconn = {
 static uint8_t _mqttclient_tx_buffer[200];
 static uint8_t _mqttclient_rx_buffer[200];
 
-
-/* MQTT connection structure instance. */
+/** MQTT connection structure instance. */
 static struct umqtt_connection _mqtt = {
     .txbuff = {
         .start = _mqttclient_tx_buffer,
@@ -318,15 +317,35 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
 
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
     if (!_message_sending) {
-        enum bmp180_io_result _io_result = bmp180_read(BMP180_OSS_8);
         // TODO: hardcoded constant
         char buf[20];
-        uint16_t len;
-        if (_io_result == BMP180_IO_OK) {
-            len = os_sprintf(buf, "%d.%d", bmp180_data.temperature / 1000, bmp180_data.temperature % 1000);
-            umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_TEMPERATURE, (uint8_t *) buf, len);
-            len = os_sprintf(buf, "%d", bmp180_data.pressure);
-            umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_PRESSURE, (uint8_t *) buf, len);
+        uint16_t _len = 0;
+        enum bmp180_io_result _io_result = bmp180_read(BMP180_OSS_8);
+        switch (_io_result) {
+            case BMP180_IO_OK:
+                _len = os_sprintf(buf, "%d.%d", bmp180_data.temperature / 1000, bmp180_data.temperature % 1000);
+                umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_TEMPERATURE, (uint8_t *) buf, _len);
+                _len = os_sprintf(buf, "%d", bmp180_data.pressure);
+                umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_PRESSURE, (uint8_t *) buf, _len);
+                break;
+            case BMP180_IO_WRITE_ADDRESS_ERROR:
+                _len = os_sprintf(buf, "E_WRITE_ADDRESS");
+                break;
+            case BMP180_IO_WRITE_REGISTER_ERROR:
+                _len = os_sprintf(buf, "E_WRITE_REGISTER");
+                break;
+            case BMP180_IO_WRITE_VALUE_ERROR:
+                _len = os_sprintf(buf, "E_WRITE_VALUE");
+                break;
+            case BMP180_IO_READ_ADDRESS_ERROR:
+                _len = os_sprintf(buf, "E_READ_ADDRESS");
+                break;
+        }
+
+        /* Publish error codes. */
+        if (_io_result != BMP180_IO_OK) {
+            umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_TEMPERATURE, (uint8_t *) buf, _len);
+            umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_PRESSURE, (uint8_t *) buf, _len);
         }
         _mqttclient_data_send();
     }
