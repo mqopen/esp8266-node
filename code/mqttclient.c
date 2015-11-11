@@ -27,39 +27,25 @@
 #include "bmp180.h"
 #include "mqttclient.h"
 
-/**
- * Timer for ending MQTT Keep Alive messages.
- */
+/** Timer for ending MQTT Keep Alive messages. */
 static os_timer_t _keep_alive_timer;
 
-/**
- * Timer for sending DHT measurements.
- */
+/** Timer for sending DHT measurements. */
 static os_timer_t  _publish_timer;
 
-/**
- * Timer for limit reconnect attempts.
- */
+/** Timer for limit reconnect attempts. */
 static os_timer_t _reconnect_timer;
 
-/**
- * Keep track if MQTT client is running.
- */
+/** Keep track if MQTT client is running. */
 static bool _is_running = false;
 
-/**
- * Signal network activity.
- */
+/** Signal network activity. */
 struct actsig_signal _activity_signal;
 
-/**
- * TCP connection.
- */
+/** TCP connection. */
 static struct _esp_tcp _mqttclient_tcp;
 
-/**
- * Network connection.
- */
+/** Network connection. */
 static struct espconn _mqttclient_espconn = {
     .proto.tcp = &_mqttclient_tcp,
 };
@@ -79,17 +65,19 @@ static struct umqtt_connection _mqtt = {
     },
 };
 
-/**
- * Keep track message send in progress.
- */
+/** Keep track message send in progress. */
 static bool _message_sending = false;
+
+/** Keep track if keep alive message send is in progress. */
+static bool _keep_alive_sending = false;
+
+/** Keep track if publish message send is in progress. */
+static bool _publish_sending = false;
 
 /* Static function prototypes. */
 
 /**
  * Publish MQTT data to broker.
- *
- * @todo Not implemented yet.
  */
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void);
 
@@ -312,11 +300,16 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, 
 
 static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
     _message_sending = false;
+    if (_keep_alive_sending)
+        _keep_alive_sending = false;
+    if (_publish_sending)
+        _publish_sending = false;
     _mqttclient_data_send();
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
-    if (!_message_sending) {
+    if (!_publish_sending) {
+        _publish_sending = true;
         // TODO: hardcoded constant
         char buf[20];
         uint16_t _len = 0;
@@ -352,7 +345,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
-    if (!_message_sending) {
+    if (!_keep_alive_sending) {
+        _keep_alive_sending = true;
         umqtt_ping(&_mqtt);
         _mqttclient_data_send();
     }
