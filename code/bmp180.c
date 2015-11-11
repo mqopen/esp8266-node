@@ -203,8 +203,11 @@ static void ICACHE_FLASH_ATTR _bmp180_init_calibration(void) {
 
 static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_read_ut(int32_t *ut) {
     uint16_t _ut16;
-    _bmp180_write(BMP180_REGISTER_CTRL_MEAS, _BV(BMP180_SCO) | 0x0e);
-    enum bmp180_io_result _io_result = _bmp180_loop_sco();
+    enum bmp180_io_result _io_result;
+    _io_result = _bmp180_write(BMP180_REGISTER_CTRL_MEAS, _BV(BMP180_SCO) | 0x0e);
+    if (_io_result != BMP180_IO_OK)
+        return _io_result;
+    _io_result = _bmp180_loop_sco();
     if (_io_result != BMP180_IO_OK)
         return _io_result;
     _io_result =_bmp180_read_short(BMP180_OUT_MSB, BMP180_OUT_LSB, &_ut16);
@@ -218,7 +221,9 @@ static enum bmp180_io_result ICACHE_FLASH_ATTR _bmp180_read_up(int32_t *up, enum
     uint8_t _up_lsb;
     uint8_t _up_xlsb;
     enum bmp180_io_result _io_result;
-    _bmp180_write(BMP180_REGISTER_CTRL_MEAS, (uint8_t) (0x34 | (oss << BMP180_OSS_SHIFT)));
+    _io_result = _bmp180_write(BMP180_REGISTER_CTRL_MEAS, (uint8_t) (0x34 | (oss << BMP180_OSS_SHIFT)));
+    if (_io_result != BMP180_IO_OK)
+        return _io_result;
     _io_result = _bmp180_loop_sco();
     if (_io_result != BMP180_IO_OK)
         return _io_result;
