@@ -313,7 +313,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
         // TODO: hardcoded constant
         char buf[20];
         uint16_t _len = 0;
-        enum bmp180_io_result _io_result = bmp180_read(BMP180_OSS_8);
+        enum bmp180_io_result _io_result = bmp180_read(BMP180_OSS_SINGLE);
         switch (_io_result) {
             case BMP180_IO_OK:
                 _len = os_sprintf(buf, "%d.%d", bmp180_data.temperature / 1000, bmp180_data.temperature % 1000);

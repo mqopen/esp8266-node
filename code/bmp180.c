@@ -104,6 +104,10 @@ bool ICACHE_FLASH_ATTR bmp180_test(void) {
     return bmp180_get_chip_id() == BMP180_CHIP_ID;
 }
 
+int32_t round_div(int32_t x, int32_t y) {
+    return (x + 1) / y - 1;
+}
+
 enum bmp180_io_result ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss oss) {
     /* Read temperature. */
     int32_t _ut = 0;
@@ -112,20 +116,31 @@ enum bmp180_io_result ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss oss
     int32_t _x2;
     int32_t _x3;
     int32_t _b3;
-   uint32_t _b4;
+    uint32_t _b4;
     int32_t _b5;
     int32_t _b6;
-   uint32_t _b7;
+    uint32_t _b7;
     int32_t _t;
     int32_t _p;
 
     enum bmp180_io_result _io_result;
     _io_result = _bmp180_read_ut(&_ut);
+    _ut = 27898;
     if (_io_result == BMP180_IO_OK) {
+         os_printf(" -- Temperature:\r\n");
+         os_printf("UT: %d\r\n", _ut);
         _x1 = ((_ut - _bmp180_calibration.ac6) * _bmp180_calibration.ac5) >> 15;
-        _x2 = (_bmp180_calibration.mc << 11) / (_x1 + _bmp180_calibration.md);
+        os_printf("X1: %d\r\n", _x1);
+        _x2 = _bmp180_calibration.mc;
+        _x2 <<= 11;
+        os_printf("X2: %d, X1: %d, MD: %d\r\n", _x2, _x1, _bmp180_calibration.md);
+        //_x2 /= ((int32_t) _x1) + _bmp180_calibration.md;
+        _x2 = round_div(_x2, _x1 + _bmp180_calibration.md);
+        os_printf("X2: %d\r\n", _x2);
         _b5 = _x1 + _x2;
+        os_printf("B5: %d\r\n", _b5);
         _t = (_b5 + 8) >> 4;
+        os_printf("T: %d\r\n", _t);
         bmp180_data.temperature = _t * 100;
     } else {
         return _io_result;
@@ -133,7 +148,9 @@ enum bmp180_io_result ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss oss
 
     /* Read pressure. */
     _io_result = _bmp180_read_up(&_up, oss);
+    _up = 23843;
     if (_io_result == BMP180_IO_OK) {
+        os_printf(" -- Pressure:\r\n");
         os_printf("UP: %d\r\n", _up);
         _b6 = _b5 - 4000;
         os_printf("B6: %d\r\n", _b6);
@@ -156,9 +173,11 @@ enum bmp180_io_result ICACHE_FLASH_ATTR bmp180_read(enum bmp180_pressure_oss oss
         _b7 = ((uint32_t) _up - _b3) * (50000 >> oss);
         os_printf("B7: %u\r\n", _b7);
         if (_b7 < 0x80000000) {
-            _p = (_b7 << 1) / _b4;
+            //_p = (_b7 << 1) / _b4;
+            _p = round_div(_b7 << 1, _b4);
         } else {
-            _p = (_b7 / _b4) << 1;
+            //_p = (_b7 / _b4) << 1;
+            _p = round_div(_b7, _b4) << 1;
         }
         os_printf("P: %d\r\n", _p);
         _x1 = (_p >> 8) * (_p >> 8);
@@ -187,6 +206,18 @@ static void ICACHE_FLASH_ATTR _bmp180_init_calibration(void) {
     _bmp180_read_short(BMP180_CALIBRATION_MB_MSB, BMP180_CALIBRATION_MB_LSB, (uint16_t *) &_bmp180_calibration.mb);
     _bmp180_read_short(BMP180_CALIBRATION_MC_MSB, BMP180_CALIBRATION_MC_LSB, (uint16_t *) &_bmp180_calibration.mc);
     _bmp180_read_short(BMP180_CALIBRATION_MD_MSB, BMP180_CALIBRATION_MB_LSB, (uint16_t *) &_bmp180_calibration.md);
+
+    _bmp180_calibration.ac1 = 408;
+    _bmp180_calibration.ac2 = -72;
+    _bmp180_calibration.ac3 = -14383;
+    _bmp180_calibration.ac4 = 32741;
+    _bmp180_calibration.ac5 = 32757;
+    _bmp180_calibration.ac6 = 23153;
+    _bmp180_calibration.b1 = 6190;
+    _bmp180_calibration.b2 = 4;
+    _bmp180_calibration.mb = -32768;
+    _bmp180_calibration.mc = -8711;
+    _bmp180_calibration.md = 2868;
 
     os_printf("AC1: %d\r\n", _bmp180_calibration.ac1);
     os_printf("AC2: %d\r\n", _bmp180_calibration.ac2);
