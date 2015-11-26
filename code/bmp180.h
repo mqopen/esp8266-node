@@ -83,6 +83,7 @@ enum bmp180_io_result {
     BMP180_IO_WRITE_REGISTER_ERROR,     /**< Write of destination register not acknowledged. */
     BMP180_IO_WRITE_VALUE_ERROR,        /**< Write of register value not acknowledged (Write operation only). */
     BMP180_IO_READ_ADDRESS_ERROR,       /**< Read address not acknowledged. */
+    BMP180_IO_INVALID_DATA,             /**< Invalid data. */
 };
 
 /**

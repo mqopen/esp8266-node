@@ -229,7 +229,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_connect_callback(void *arg) {
-    os_printf("Connected\r\n");
     espconn_regist_sentcb(&_mqttclient_espconn, _mqttclient_data_sent);
     espconn_regist_recvcb(&_mqttclient_espconn, _mqttclient_data_received);
     actsig_set_normal_on(&_activity_signal);
@@ -239,28 +238,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_connect_callback(void *arg) {
 
 static void ICACHE_FLASH_ATTR _mqttclient_reconnect_callback(void *arg, sint8 err) {
     _mqttclient_stop_communication();
-    os_printf("Reconnect\r\n");
-    switch (err) {
-        case ESPCONN_TIMEOUT:
-            os_printf("ESPCONN_TIMEOUT\r\n");
-            break;
-        case ESPCONN_ABRT:
-            os_printf("ESPCONN_ABRT\r\n");
-            break;
-        case ESPCONN_RST:
-            os_printf("ESPCONN_RST\r\n");
-            break;
-        case ESPCONN_CLSD:
-            os_printf("ESPCONN_CLSD\r\n");
-            break;
-        case ESPCONN_CONN:
-            os_printf("ESPCONN_CONN\r\n");
-            break;
-        case ESPCONN_HANDSHAKE:
-            os_printf("ESPCONN_HANDSHAKE\r\n");
-            break;
-    }
-
     switch (err) {
         case ESPCONN_TIMEOUT:
         case ESPCONN_ABRT:
@@ -274,7 +251,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_reconnect_callback(void *arg, sint8 er
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_disconnect_callback(void *arg) {
-    os_printf("Disconnect\r\n");
     _mqttclient_reset_buffers();
     _mqttclient_stop_communication();
     _message_sending = false;
@@ -288,7 +264,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_write_finish_fn(void *arg) {
-    os_printf("Write finish\r\n");
     actsig_set_normal_off(&_activity_signal);
 }
 
@@ -332,6 +307,9 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
                 break;
             case BMP180_IO_READ_ADDRESS_ERROR:
                 _len = os_sprintf(buf, "E_READ_ADDRESS");
+                break;
+            case BMP180_IO_INVALID_DATA:
+                _len = os_sprintf(buf, "E_INVALID_DATA");
                 break;
         }
 
