@@ -20,4 +20,7 @@
 
 #define _BV(b)  (1<<(b))
 
+#define _STR(x) #x
+#define STR(x) _STR(x)
+
 #endif

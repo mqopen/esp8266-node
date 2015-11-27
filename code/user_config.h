@@ -18,34 +18,36 @@
 #ifndef __USER_CONFIG_H__
 #define __USER_CONFIG_H__
 
+#include "common.h"
+
 /** Wi-Fi configuration. */
-#define CONFIG_WIFI_SSID        "hostapd"
-#define CONFIG_WIFI_PASSWORD    "password"
+#define CONFIG_WIFI_SSID        "evzen_dole"
+#define CONFIG_WIFI_PASSWORD    "ADADADADAD"
 
 /** Sensor IP. */
 #define CONFIG_USE_DHCP             0
 #if ! CONFIG_USE_DHCP
-#define CONFIG_CLIENT_IP_ADDRESS0   192
-#define CONFIG_CLIENT_IP_ADDRESS1   168
-#define CONFIG_CLIENT_IP_ADDRESS2   10
-#define CONFIG_CLIENT_IP_ADDRESS3   200
+#define CONFIG_CLIENT_IP_ADDRESS0   10
+#define CONFIG_CLIENT_IP_ADDRESS1   0
+#define CONFIG_CLIENT_IP_ADDRESS2   0
+#define CONFIG_CLIENT_IP_ADDRESS3   52
 
 #define CONFIG_CLIENT_IP_NETMASK0   255
 #define CONFIG_CLIENT_IP_NETMASK1   255
 #define CONFIG_CLIENT_IP_NETMASK2   255
 #define CONFIG_CLIENT_IP_NETMASK3   0
 
-#define CONFIG_CLIENT_IP_GATEWAY0   192
-#define CONFIG_CLIENT_IP_GATEWAY1   168
-#define CONFIG_CLIENT_IP_GATEWAY2   10
-#define CONFIG_CLIENT_IP_GATEWAY3   1
+#define CONFIG_CLIENT_IP_GATEWAY0   10
+#define CONFIG_CLIENT_IP_GATEWAY1   0
+#define CONFIG_CLIENT_IP_GATEWAY2   0
+#define CONFIG_CLIENT_IP_GATEWAY3   138
 #endif
 
 /** Broker IP. */
-#define CONFIG_MQTT_BROKER_IP_ADDRESS0  192
-#define CONFIG_MQTT_BROKER_IP_ADDRESS1  168
-#define CONFIG_MQTT_BROKER_IP_ADDRESS2  10
-#define CONFIG_MQTT_BROKER_IP_ADDRESS3  1
+#define CONFIG_MQTT_BROKER_IP_ADDRESS0  10
+#define CONFIG_MQTT_BROKER_IP_ADDRESS1  0
+#define CONFIG_MQTT_BROKER_IP_ADDRESS2  0
+#define CONFIG_MQTT_BROKER_IP_ADDRESS3  21
 #define CONFIG_MQTT_BROKER_IP_PORT      1883
 
 #define CONFIG_PROC_TASK_QUEUE_LENGTH   1
@@ -57,11 +59,16 @@
 #define CONFIG_MQTT_KEEP_ALIVE          60
 
 /** MQTT client ID. */
-#define CONFIG_MQTT_CLIENT_ID           "esp8266-broker"
+#define _CONFIG_MQTT_CLIENT_ID         living-room-down-bmp
+#define CONFIG_MQTT_CLIENT_ID          "" STR(_CONFIG_MQTT_CLIENT_ID) ""
 
 /** Topics for temperature and pressure. */
-#define CONFIG_MQTT_TOPIC_TEMPERATURE   "test/temperature"
-#define CONFIG_MQTT_TOPIC_PRESSURE      "test/pressure"
+#define CONFIG_MQTT_TOPIC_TEMPERATURE   "living-room-down/temperature"
+#define CONFIG_MQTT_TOPIC_PRESSURE      "living-room-down/pressure"
+
+#define CONFIG_MQTT_NODE_PRESENCE_TOPIC        "presence/" STR(_CONFIG_MQTT_CLIENT_ID)
+#define CONFIG_MQTT_NODE_PRESENCE_MSG_ONLINE   "online"
+#define CONFIG_MQTT_NODE_PRESENCE_MSG_OFFLINE  "offline"
 
 /** LED notify interval. */
 #define CONFIG_MQTT_ACTIVE_LED_INTERVAL_MS  100

@@ -18,7 +18,6 @@
 #define __UMQTT_H__
 
 #include <stdint.h>
-#include <c_types.h>
 
 #define umqtt_circ_datalen(buff) \
     ((buff)->datalen)
@@ -29,9 +28,22 @@
 #define umqtt_circ_is_empty(buff) \
     (umqtt_circ_datalen() == 0)
 
+/** Protocol level fien at MQTT CONNECT message. */
+#define UMQTT_CONNECT_PROTOCOL_LEVEL        0x04
+
 /**
- * MQTT packet type.
+ * Connection bit flags.
  */
+#define UMQTT_CONNECT_FLAG_CLEAN_SESSION    1
+#define UMQTT_CONNECT_FLAG_WILL             2
+#define UMQTT_CONNECT_FLAG_WILL_RETAIN      5
+#define UMQTT_CONNECT_FLAG_PASSWORD         6
+#define UMQTT_CONNECT_FLAG_USERNAME         7
+
+/** UMQTT flags */
+#define UMQTT_OPT_RETAIN                    0
+
+/** Type of MQTT packets. */
 enum umqtt_packet_type {
     UMQTT_CONNECT       = 1,        /**< CONNECT */
     UMQTT_CONNACK       = 2,        /**< CONNACK */
@@ -40,16 +52,21 @@ enum umqtt_packet_type {
     UMQTT_SUBACK        = 9,        /**< SUBACK */
     UMQTT_UNSUBSCRIBE   = 10,       /**< UNSUBSCRIBE */
     UMQTT_UNSUBACK      = 11,       /**< UNSUBACK */
-    UMQTT_PINGREQ       = 12,       /**< PINGREQ */
+    UMQTT_PINGREQ       = 12,       /**< SINGREQ */
     UMQTT_PINGRESP      = 13,       /**< PINGRESP */
     UMQTT_DISCONNECT    = 14,       /**< DISCONNECT */
 };
 
 /**
- * MQTT client state.
- *
- * @todo needed?
+ * MQTT Quality of service.
  */
+enum umqtt_qos {
+    UMQTT_QOS_0 = 0,        /**< At most once delivery. */
+    UMQTT_QOS_1 = 1,        /**< At least once delivery. */
+    UMQTT_QOS_2 = 2,        /**< Exactly once delivery. */
+};
+
+/** State of MQTT client. */
 enum umqtt_client_state {
     UMQTT_STATE_INIT,
     UMQTT_STATE_CONNECTING,
@@ -57,26 +74,23 @@ enum umqtt_client_state {
     UMQTT_STATE_FAILED,
 };
 
-/**
- * MQTT circular buffer.
- */
+/** MQTT buffer. */
 struct umqtt_circ_buffer {
     uint8_t *start;
-    int16_t length;
+    uint16_t length;
 
     /* Private */
     uint8_t *pointer;
     int16_t datalen;
 };
 
-/**
- * MQTT connection.
- */
+/** MQTT connection object. */
 struct umqtt_connection {
-    struct umqtt_circ_buffer txbuff;
-    struct umqtt_circ_buffer rxbuff;
+    struct umqtt_circ_buffer txbuff;        /**< TX buffer. */
+    struct umqtt_circ_buffer rxbuff;        /**< RX buffer. */
 
-    void (*message_callback)(struct umqtt_connection *, char *topic, uint8_t *data, int16_t len);
+    /** Pointer to message handler function. */
+    void (*message_callback)(struct umqtt_connection *, char *topic, uint8_t *data, uint16_t len);
 
     /* Private */
     /* ack counters - incremented on sending, decremented on ack */
@@ -89,24 +103,75 @@ struct umqtt_connection {
     enum umqtt_client_state state;
 };
 
+/** Configuration object for connecting to MQTT broker. */
+struct umqtt_connect_config {
+    uint16_t keep_alive;            /** Keep alive interval setting. */
+    char *client_id;                /** Client id string. */
+    char *will_topic;               /** Last will message topic or NULL. */
+    uint8_t *will_message;          /** Last will message. Irrelevant when will topic is NULL or zero length. */
+    uint16_t will_message_len;      /** Last will message length. Irrelevant when will topic is NULL or zero length. */
+    uint8_t flags;                  /** Configuration flags. */
+};
+
 /**
- * Initiate MQTT circulat buffer.
+ * Initiate uMQTT circular buffer.
  *
- * @param buff
+ * @param buff Pointer to buffer object.
  */
-void ICACHE_FLASH_ATTR umqtt_circ_init(struct umqtt_circ_buffer *buff);
+void umqtt_circ_init(struct umqtt_circ_buffer *buff);
 
 /* Return the amount of bytes left */
-int16_t ICACHE_FLASH_ATTR umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, uint16_t len);
+int16_t umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len);
 
 /* Returns amount of bytes popped/peeked */
-int16_t ICACHE_FLASH_ATTR umqtt_circ_pop(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len);
-int16_t ICACHE_FLASH_ATTR umqtt_circ_peek(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len);
-void ICACHE_FLASH_ATTR umqtt_init(struct umqtt_connection *conn);
-void ICACHE_FLASH_ATTR umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid);
-void ICACHE_FLASH_ATTR umqtt_subscribe(struct umqtt_connection *conn, char *topic);
-void ICACHE_FLASH_ATTR umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, uint16_t datalen);
-void ICACHE_FLASH_ATTR umqtt_ping(struct umqtt_connection *conn);
-void ICACHE_FLASH_ATTR umqtt_process(struct umqtt_connection *conn);
+int16_t umqtt_circ_pop(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len);
+int16_t umqtt_circ_peek(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len);
 
-#endif
+/**
+ * Initiate MQTT object.
+ *
+ * @param conn Connection object.
+ */
+void umqtt_init(struct umqtt_connection *conn);
+
+/**
+ * Connect to MQTT broker.
+ *
+ * @param conn Connection object.
+ * @param config Connection config object.
+ */
+void umqtt_connect(struct umqtt_connection *conn, struct umqtt_connect_config *config);
+
+/**
+ * Subscribe to MQTT topic.
+ *
+ * @param conn Connection object.
+ * @param topic Topic name.
+ */
+void umqtt_subscribe(struct umqtt_connection *conn, char *topic);
+
+/**
+ * Publish MQTT message.
+ *
+ * @param conn Connection object.
+ * @param topic Message topic.
+ * @param data Message payload.
+ * @param datalen Message payload length.
+ */
+void umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, uint16_t datalen, uint8_t flags);
+
+/**
+ * Send PINGREQ message to MQTT broker.
+ *
+ * @param conn Connection object.
+ */
+void umqtt_ping(struct umqtt_connection *conn);
+
+/**
+ * Process RX buffer.
+ *
+ * @param conn Connection object.
+ */
+void umqtt_process(struct umqtt_connection *conn);
+
+#endif /* __UMQTT_H__ */
