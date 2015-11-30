@@ -61,13 +61,16 @@ static inline void _network_update_state(enum network_state state);
 void ICACHE_FLASH_ATTR network_init(void) {
     wifi_set_event_handler_cb(_network_wifi_event_callback);
     _network_config_address();
+    _network_update_state(NETWORK_STATE_INIT);
 }
 
 static void ICACHE_FLASH_ATTR _network_config_address(void) {
 #if CONFIG_USE_DHCP
 #error "Not implemented yet"
 #else
-    wifi_station_dhcpc_stop();
+    wifi_set_opmode(STATIONAP_MODE);
+    if (!wifi_station_dhcpc_stop())
+        os_printf("dhcpc stop failed\r\n");
     IP4_ADDR(&ip_info.ip, CONFIG_CLIENT_IP_ADDRESS0,
                             CONFIG_CLIENT_IP_ADDRESS1,
                             CONFIG_CLIENT_IP_ADDRESS2,

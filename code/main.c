@@ -32,15 +32,12 @@ void ICACHE_FLASH_ATTR user_rf_pre_init(void) {
 
 void ICACHE_FLASH_ATTR user_init(void) {
     uart_init(BIT_RATE_115200, BIT_RATE_115200);
-    node_init();
     network_init();
+    node_init();
     i2c_master_gpio_init();
     i2c_master_init();
     bmp180_init();
     mqttclient_init();
     system_init_done_cb(network_connect);
-
-    os_printf("here");
-
     node_update_state(NODE_STATE_INIT);
 }
