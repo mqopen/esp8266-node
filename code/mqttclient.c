@@ -242,7 +242,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
 static void ICACHE_FLASH_ATTR _mqttclient_connect_callback(void *arg) {
     espconn_regist_sentcb(&_mqttclient_espconn, _mqttclient_data_sent);
     espconn_regist_recvcb(&_mqttclient_espconn, _mqttclient_data_received);
-    actsig_set_normal_on(&_activity_signal);
     _mqttclient_broker_connect();
     _mqttclient_start_mqtt_timers();
 }
@@ -287,7 +286,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, 
     if (previous_state != UMQTT_STATE_CONNECTED && _mqtt.state == UMQTT_STATE_CONNECTED) {
 
         /* Signal established connection. */
-        //_mqttclient_signal_connected();
+        actsig_set_normal_on(&_activity_signal);
 
         /* Send presence message. */
         umqtt_publish(&_mqtt,
