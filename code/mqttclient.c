@@ -229,8 +229,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
                     CONFIG_MQTT_BROKER_IP_ADDRESS1,
                     CONFIG_MQTT_BROKER_IP_ADDRESS2,
                     CONFIG_MQTT_BROKER_IP_ADDRESS3);
-    // TODO: hardcoded IP address length literal
-    os_memcpy(_mqttclient_espconn.proto.tcp->remote_ip, &ip, 4);
+    os_memcpy(_mqttclient_espconn.proto.tcp->remote_ip, &ip, sizeof(struct ip_addr));
 
     espconn_regist_connectcb(&_mqttclient_espconn, _mqttclient_connect_callback);
     espconn_regist_disconcb(&_mqttclient_espconn, _mqttclient_disconnect_callback);
