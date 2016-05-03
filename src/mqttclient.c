@@ -24,7 +24,7 @@
 #include "user_config.h"
 #include "umqtt.h"
 #include "actsig.h"
-#include "bmp180.h"
+#include "sensor.h"
 #include "mqttclient.h"
 
 /** Timer for ending MQTT Keep Alive messages. */
@@ -68,11 +68,11 @@ static struct umqtt_connection _mqtt = {
 
 /** MQTT connection configuration. */
 static struct umqtt_connect_config _connection_config = {
-    .keep_alive = CONFIG_MQTT_KEEP_ALIVE,
+    .keep_alive = CONFIG_MQTT_KEEPALIVE_CONNECT_INTERVAL,
     .client_id = CONFIG_MQTT_CLIENT_ID,
     .will_topic = CONFIG_MQTT_NODE_PRESENCE_TOPIC,
-    .will_message = (uint8_t *) CONFIG_MQTT_NODE_PRESENCE_MSG_OFFLINE,
-    .will_message_len = sizeof(CONFIG_MQTT_NODE_PRESENCE_MSG_OFFLINE),
+    .will_message = (uint8_t *) CONFIG_MQTT_PRESENCE_OFFLINE,
+    .will_message_len = sizeof(CONFIG_MQTT_PRESENCE_OFFLINE),
     .flags = _BV(UMQTT_OPT_RETAIN),
 };
 
@@ -187,7 +187,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_reset_buffers(void);
 void ICACHE_FLASH_ATTR mqttclient_init(void) {
 
     /* Signalization LED. */
-    actsig_init(&_activity_signal, CONFIG_MQTT_ACTIVE_LED_INTERVAL_MS);
+    actsig_init(&_activity_signal, CONFIG_MQTT_ACTIVITY_LED_BLINK_TRANSMITT_DELAY);
     actsig_set_normal_off(&_activity_signal);
 
     /* Initiate timers. */
@@ -224,7 +224,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
     _mqttclient_espconn.state = ESPCONN_NONE;
     _mqttclient_espconn.reverse = &_mqttclient_espconn;
     _mqttclient_espconn.proto.tcp->local_port = espconn_port();
-    _mqttclient_espconn.proto.tcp->remote_port = CONFIG_MQTT_BROKER_IP_PORT;
+    _mqttclient_espconn.proto.tcp->remote_port = CONFIG_MQTT_BROKER_PORT;
     IP4_ADDR(&ip, CONFIG_MQTT_BROKER_IP_ADDRESS0,
                     CONFIG_MQTT_BROKER_IP_ADDRESS1,
                     CONFIG_MQTT_BROKER_IP_ADDRESS2,
@@ -290,8 +290,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, 
         /* Send presence message. */
         umqtt_publish(&_mqtt,
                         CONFIG_MQTT_NODE_PRESENCE_TOPIC,
-                        (uint8_t *) CONFIG_MQTT_NODE_PRESENCE_MSG_ONLINE,
-                        sizeof(CONFIG_MQTT_NODE_PRESENCE_MSG_ONLINE),
+                        (uint8_t *) CONFIG_MQTT_PRESENCE_ONLINE,
+                        sizeof(CONFIG_MQTT_PRESENCE_ONLINE),
                         _BV(UMQTT_OPT_RETAIN));
     }
     _mqttclient_data_send();
@@ -307,43 +307,21 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
-    if (!_publish_sending) {
-        _publish_sending = true;
-        // TODO: hardcoded constant
-        char buf[20];
-        uint16_t _len = 0;
-        enum bmp180_io_result _io_result = bmp180_read(BMP180_OSS_SINGLE);
-        switch (_io_result) {
-            case BMP180_IO_OK:
-                _len = os_sprintf(buf, "%d.%d", bmp180_data.temperature / 1000, bmp180_data.temperature % 1000);
-                umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_TEMPERATURE, (uint8_t *) buf, _len, 0);
-                _len = os_sprintf(buf, "%d", bmp180_data.pressure);
-                umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_PRESSURE, (uint8_t *) buf, _len, 0);
-                break;
-            case BMP180_IO_WRITE_ADDRESS_ERROR:
-                _len = os_sprintf(buf, "E_WRITE_ADDRESS");
-                break;
-            case BMP180_IO_WRITE_REGISTER_ERROR:
-                _len = os_sprintf(buf, "E_WRITE_REGISTER");
-                break;
-            case BMP180_IO_WRITE_VALUE_ERROR:
-                _len = os_sprintf(buf, "E_WRITE_VALUE");
-                break;
-            case BMP180_IO_READ_ADDRESS_ERROR:
-                _len = os_sprintf(buf, "E_READ_ADDRESS");
-                break;
-            case BMP180_IO_INVALID_DATA:
-                _len = os_sprintf(buf, "E_INVALID_DATA");
-                break;
-        }
-
-        /* Publish error codes. */
-        if (_io_result != BMP180_IO_OK) {
-            umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_TEMPERATURE, (uint8_t *) buf, _len, 0);
-            umqtt_publish(&_mqtt, CONFIG_MQTT_TOPIC_PRESSURE, (uint8_t *) buf, _len, 0);
-        }
-        _mqttclient_data_send();
-    }
+    //uint8_t _i;
+    //uint8_t _len;
+    //char *_buf;
+    //
+    //if (!_publish_sending) {
+    //    _publish_sending = true;
+    //
+    //    sensor_read();
+    //    for (_i = 0; _i < sensor_topics_count; _i++) {
+    //        _len = sensor_get_value(_i, _buf, SENSOR_VALUE_BUFFER_SIZE);
+    //        umqtt_publish(&_mqtt, sensor_topics[_i], (uint8_t *) _buf, _len, 0);
+    //    }
+    //
+    //    _mqttclient_data_send();
+    //}
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
@@ -355,8 +333,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_start_mqtt_timers(void) {
-    os_timer_arm(&_keep_alive_timer, CONFIG_MQTT_KEEP_ALIVE_INTERVAL_MS, 1);
-    os_timer_arm(&_publish_timer, CONFIG_MQTT_PUBLISH_INTERVAL_MS, 1);
+    os_timer_arm(&_keep_alive_timer, CONFIG_MQTT_KEEPALIVE_REQUEST_INTERVAL * 1000, 1);
+    os_timer_arm(&_publish_timer, CONFIG_MQTT_PUBLISH_INTERVAL * 1000, 1);
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_stop_mqtt_timers(void) {

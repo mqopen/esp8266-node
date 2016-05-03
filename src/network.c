@@ -41,8 +41,8 @@ static struct ip_info ip_info;
  * Wireless association.
  */
 static struct station_config station_config = {
-    .ssid = CONFIG_WIFI_SSID,
-    .password = CONFIG_WIFI_PASSWORD,
+    .ssid = CONFIG_WIRELESS_SSID,
+    .password = CONFIG_WIRELESS_PSK,
 };
 
 /* Static function prototypes. */

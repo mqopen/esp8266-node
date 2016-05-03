@@ -21,8 +21,8 @@
 #include "user_config.h"
 #include "uart.h"
 #include "node.h"
-#include "i2c_master.h"
-#include "bmp180.h"
+#include "bus.h"
+#include "sensor.h"
 #include "network.h"
 #include "mqttclient.h"
 
@@ -34,9 +34,8 @@ void ICACHE_FLASH_ATTR user_init(void) {
     uart_init(BIT_RATE_115200, BIT_RATE_115200);
     network_init();
     node_init();
-    i2c_master_gpio_init();
-    i2c_master_init();
-    bmp180_init();
+    bus_init();
+    sensor_init();
     mqttclient_init();
     system_init_done_cb(network_connect);
     node_update_state(NODE_STATE_INIT);

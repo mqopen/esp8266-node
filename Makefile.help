@@ -1,0 +1,38 @@
+# ==========================================================================
+# Build system
+# ==========================================================================
+
+help:
+	@echo 'Node build system'
+	@echo
+	@echo 'Cleaning:'
+	@echo '  clean              - Delete temporary files created by build'
+	@echo '  distclean          - Delete all non-source files (including .config)'
+	@echo '  doc-clean          - Delete all generated documentation'
+	@echo
+	@echo 'Build:'
+	@echo '  all                - Executable and documentation'
+	@echo '  firmware           - Firmware'
+	@echo
+	@echo 'Configuration:'
+	@echo '  allnoconfig        - Disable all symbols in .config'
+	@echo '  allyesconfig       - Enable all symbols in .config (see defconfig)'
+	@echo '  config             - Text based configurator (of last resort)'
+	@echo '  defconfig          - Set .config to largest generic configuration'
+	@echo '  menuconfig         - Interactive curses-based configurator'
+	@echo '  oldconfig          - Resolve any unresolved symbols in .config'
+	@$(if $(boards), \
+		echo; \
+		echo 'Boards:'; \
+		$(foreach b, $(boards), \
+		printf "  %-18s - Build for %s\\n" $(b) $(subst _defconfig,,$(b));) \
+		echo '')
+	@echo
+	@echo 'Flashing:'
+	@echo '  upload             - Upload firmware'
+	@echo
+	@echo 'Miscellaneous:'
+	@echo '  make V=0|1         - 0 => quiet build (default), 1 => verbose build'
+	@echo
+	@echo 'Author: Ivo Slanina <ivo.slanina@gmail.com>'
+	@echo

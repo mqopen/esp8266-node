@@ -1,0 +1,189 @@
+#
+# For a description of the syntax of this configuration file,
+# see scripts/kbuild/config-language.txt.
+#
+
+mainmenu "Firmware Configuration"
+
+menu "General Settings"
+config GENERAL_DEVICE_NAME
+	string "Device name"
+	default "node"
+config GENERAL_DEVICE_LOCATION
+	string "Device location"
+	default "room"
+endmenu
+
+menu "Wireless Settings"
+config WIRELESS_SSID
+	string "Access point SSID"
+	default "hostapd"
+config WIRELESS_PSK
+	string "Access point password"
+	default "password"
+endmenu
+
+menu "Network Settings"
+config NETWORK_USE_DHCP
+	bool "Use DHCP"
+	default n
+if !NETWORK_USE_DHCP
+config NETWORK_IP_ADDRESS
+	string "Device static IP address"
+	default "192.168.1.10"
+config NETWORK_NETMASK
+	string "Device netmask"
+	default "255.255.255.0"
+config NETWORK_GATEWAY
+	string "Gateway"
+	default "192.168.1.1"
+endif # !NETWORK_USE_DHCP
+endmenu
+
+menu "MQTT Settings"
+config MQTT_BROKER_ADDRESS
+	string "MQTT Broker address"
+	default "192.168.1.1"
+config MQTT_BROKER_PORT
+	int "MQTT Broker port"
+	default 1883
+config MQTT_KEEPALIVE_CONNECT_INTERVAL
+	int "MQTT keep alive interval (sec)"
+	default 60
+config MQTT_KEEPALIVE_REQUEST_INTERVAL
+	int "MQTT keep alive interval (sec)"
+	default 30
+config MQTT_PUBLISH_INTERVAL
+	int "MQTT data update interval (sec)"
+	default 2
+menuconfig MQTT_PRESENCE
+	bool "MQTT presence"
+	default y
+if MQTT_PRESENCE
+config MQTT_PRESENCE_TOPIC
+	string "MQTT presence topic"
+	default "presence"
+config MQTT_PRESENCE_ONLINE
+	string "MQTT presence online message"
+	default "online"
+config MQTT_PRESENCE_OFFLINE
+	string "MQTT presence offline message"
+	default "offline"
+endif # MQTT_PRESENCE
+menuconfig MQTT_ACTIVITY_LED
+	bool "MQTT activity led"
+	default y
+if MQTT_ACTIVITY_LED
+config MQTT_ACTIVITY_LED_CONNECTION_ESTABLISHED
+	bool "Signalize when connection is established to MQTT broker"
+	default y
+	depends on MQTT_ACTIVITY_LED
+if MQTT_ACTIVITY_LED_CONNECTION_ESTABLISHED
+choice
+	prompt "Activity LED logic"
+	default MQTT_ACTIVITY_LED_CONNECTION_ESTABLISHED_ON
+config MQTT_ACTIVITY_LED_CONNECTION_ESTABLISHED_ON
+	bool "On when connected to broker"
+    depends on MQTT_ACTIVITY_LED_CONNECTION_ESTABLISHED
+config MQTT_ACTIVITY_LED_CONNECTION_ESTABLISHED_OFF
+	bool "Off when connected to broker"
+	depends on MQTT_ACTIVITY_LED_CONNECTION_ESTABLISHED
+endchoice
+endif # MQTT_ACTIVITY_LED_CONNECTION_ESTABLISHED
+config MQTT_ACTIVITY_LED_BLINK_TRANSMITT
+	bool "Blink when transmitting data"
+	default y
+	depends on MQTT_ACTIVITY_LED
+if MQTT_ACTIVITY_LED_BLINK_TRANSMITT
+config MQTT_ACTIVITY_LED_BLINK_TRANSMITT_DELAY
+	int "Blink time (ms)"
+	default 100
+	depends on MQTT_ACTIVITY_LED_BLINK_TRANSMITT
+endif # MQTT_ACTIVITY_LED_BLINK_TRANSMITT
+config MQTT_ACTIVITY_LED_GPIO_PIN
+	int "MQTT activity led GPIO pin number"
+	default 16
+endif # MQTT_ACTIVITY_LED
+endmenu
+
+menu "Sensor Settings"
+choice
+	prompt "Used sensor"
+	default SENSOR_DHT22
+config SENSOR_DHT22
+	bool "DHT22 Teperature humidity sensor"
+	select BUS_ONEWIRE
+config SENSOR_BMP180
+	bool "BMP180 Barometric pressure sensor"
+	select BUS_I2C
+config SENSOR_BH1750FVI
+	bool "BH1750FVI Ambient light sensor"
+	select BUS_I2C
+endchoice
+config SENSOR_DHT22_TEMPERATURE
+	bool "Temperature"
+	depends on SENSOR_DHT22
+	default y
+if SENSOR_DHT22_TEMPERATURE
+config SENSOR_DHT22_TEMPERATURE_TOPIC
+	string "DHT22 Temperature topic"
+	depends on SENSOR_DHT22 && SENSOR_DHT22_TEMPERATURE
+	default "temperature"
+endif # SENSOR_DHT22_TEMPERATURE
+config SENSOR_DHT22_HUMIDITY
+	bool "Humidity"
+	depends on SENSOR_DHT22
+	default y
+if SENSOR_DHT22_HUMIDITY
+config SENSOR_DHT22_HUMIDITY_TOPIC
+	string "DHT22 Humidity topic"
+	depends on SENSOR_DHT22 && SENSOR_DHT22_HUMIDITY
+	default "humidity"
+endif # SENSOR_DHT22_HUMIDITY
+config SENSOR_BMP180_TEMPERATURE
+	bool "Temperature"
+	depends on SENSOR_BMP180
+	default y
+if SENSOR_BMP180_TEMPERATURE
+config SENSOR_BMP180_TEMPERATURE_TOPIC
+	string "BMP180 Temperature topic"
+	depends on SENSOR_BMP180 && SENSOR_BMP180_TEMPERATURE
+	default "temperature"
+endif # SENSOR_BMP180_TEMPERATURE
+config SENSOR_BMP180_PRESSURE
+	bool "Pressure"
+	depends on SENSOR_BMP180
+	default y
+if SENSOR_BMP180_PRESSURE
+config SENSOR_BMP180_PRESSURE_TOPIC
+	string "BMP180 Pressure topic"
+	depends on SENSOR_BMP180 && SENSOR_BMP180_PRESSURE
+	default "pressure"
+endif # SENSOR_BMP180_PRESSURE
+config SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC
+	string "BMP180 Ambient light topic"
+	depends on SENSOR_BH1750FVI
+	default "alight"
+endmenu
+
+menu "Bus Settings"
+config BUS_I2C
+	bool "Enable I2C"
+	default n
+if BUS_I2C
+config BUS_I2C_GPIO_SDA
+	int "I2C SDA Pin"
+	default 0
+config BUS_I2C_GPIO_SCL
+	int "I2C SCL Pin"
+	default 2
+endif # BUS_I2C
+config BUS_ONEWIRE
+	bool "Enable onewire bus"
+	default n
+if BUS_ONEWIRE
+config BUS_ONEWIRE_GPIO_DQ
+	int "Onewire DQ pin"
+	default 2
+endif # BUS_ONEWIRE
+endmenu
