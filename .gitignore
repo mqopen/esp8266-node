@@ -1,4 +1,6 @@
+.*
 *.o
-*.d
+*.o.*
 *.elf
 *.bin
+Kbuild
