@@ -21,7 +21,13 @@
 #define __BH1750FVI_H__
 
 /* I2C address configuration. */
-#define BH1750FVI_ADDRESS               0x23
+#if ENABLE_SENSOR_BH1750FVI_I2C_ADDRESS_0X23
+  #define BH1750FVI_ADDRESS               0x23
+#elif ENABLE_SENSOR_BH1750FVI_I2C_ADDRESS_0X5C
+  #define BH1750FVI_ADDRESS               0x5c
+#else
+  #error Unsupported I2C address!
+#endif
 #define BH1750FVI_ADDRESS_WRITE         (BH1750FVI_ADDRESS << 1)
 #define BH1750FVI_ADDRESS_READ          ((BH1750FVI_ADDRESS << 1) | 1)
 
