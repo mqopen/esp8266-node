@@ -307,21 +307,24 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
-    //uint8_t _i;
-    //uint8_t _len;
-    //char *_buf;
-    //
-    //if (!_publish_sending) {
-    //    _publish_sending = true;
-    //
-    //    sensor_read();
-    //    for (_i = 0; _i < sensor_topics_count; _i++) {
-    //        _len = sensor_get_value(_i, _buf, SENSOR_VALUE_BUFFER_SIZE);
-    //        umqtt_publish(&_mqtt, sensor_topics[_i], (uint8_t *) _buf, _len, 0);
-    //    }
-    //
-    //    _mqttclient_data_send();
-    //}
+    uint8_t _i;
+    uint8_t _topic_len;
+    uint8_t _data_len;
+    char *_topic;
+    char *_data;
+
+    if (!_publish_sending) {
+        _publish_sending = true;
+
+        sensor_read();
+        for (_i = 0; _i < sensor_topics_count; _i++) {
+            _topic = sensor_get_topic(_i, &_topic_len);
+            _data = sensor_get_value(_i, &_data_len);
+            umqtt_publish(&_mqtt, _topic, (uint8_t *) _data, _data_len, 0);
+        }
+
+        _mqttclient_data_send();
+    }
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
