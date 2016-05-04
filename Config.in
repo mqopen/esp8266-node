@@ -140,6 +140,21 @@ config SENSOR_DHT22_HUMIDITY_TOPIC
 	depends on SENSOR_DHT22 && SENSOR_DHT22_HUMIDITY
 	default "humidity"
 endif # SENSOR_DHT22_HUMIDITY
+
+# BMP180 sensor settings.
+choice
+	prompt "BMP180 oversampling"
+	default SENSOR_BMP180_OVERSAMPLING_ULTRAHIGH
+	depends on SENSOR_BMP180
+config SENSOR_BMP180_OVERSAMPLING_ULTRALOW
+	bool "Ultra low (single)"
+config SENSOR_BMP180_OVERSAMPLING_STANDARD
+	bool "Standard (2 samples)"
+config SENSOR_BMP180_OVERSAMPLING_HIGH
+	bool "High (4 samples)"
+config SENSOR_BMP180_OVERSAMPLING_ULTRAHIGH
+	bool "Ultra high (8 samples)"
+endchoice
 config SENSOR_BMP180_TEMPERATURE
 	bool "Temperature"
 	depends on SENSOR_BMP180

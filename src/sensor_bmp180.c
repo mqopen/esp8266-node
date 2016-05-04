@@ -4,6 +4,19 @@
 #include "bmp180.h"
 #include "sensor_bmp180.h"
 
+/* Oversampling setting */
+#if ENABLE_SENSOR_BMP180_OVERSAMPLING_ULTRALOW
+  #define SENSOR_BMP180_OSS BMP180_OSS_SINGLE
+#elif ENABLE_SENSOR_BMP180_OVERSAMPLING_STANDARD
+  #define SENSOR_BMP180_OSS BMP180_OSS_2
+#elif ENABLE_SENSOR_BMP180_OVERSAMPLING_HIGH
+  #define SENSOR_BMP180_OSS BMP180_OSS_4
+#elif ENABLE_SENSOR_BMP180_OVERSAMPLING_ULTRAHIGH
+  #define SENSOR_BMP180_OSS BMP180_OSS_8
+#else
+  #error Invalind oversampling settings!
+#endif
+
 /* Check that at least one sensor reading is enabled. */
 #if ! ENABLE_SENSOR_BMP180_TEMPERATURE && ! CONFIG_SENSOR_BMP180_PRESSURE
 #error No sensor reading is enabled.
@@ -60,7 +73,7 @@ enum sensor_io_result sensor_read(void) {
     uint8_t i = 0;
     uint8_t _len = 0;
     char _buf[SENSOR_VALUE_BUFFER_SIZE];
-    enum bmp180_io_result _io_result = bmp180_read(BMP180_OSS_8);
+    enum bmp180_io_result _io_result = bmp180_read(SENSOR_BMP180_OSS);
     switch (_io_result) {
         case BMP180_IO_OK:
 #if ENABLE_SENSOR_BMP180_TEMPERATURE
