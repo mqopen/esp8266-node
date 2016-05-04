@@ -23,6 +23,7 @@
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
-#define TOPIC(t)    CONFIG_GENERAL_DEVICE_LOCATION "/" t
+#define TOPIC(t)            CONFIG_GENERAL_DEVICE_LOCATION "/" t
+#define TOPIC_PRESENCE(t)   "presence/" t
 
 #endif

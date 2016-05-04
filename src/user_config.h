@@ -47,14 +47,4 @@
 
 #define CONFIG_PROC_TASK_QUEUE_LENGTH   1
 
-/** MQTT client ID. */
-#define _CONFIG_MQTT_CLIENT_ID         chrudim-kitchen-bmp
-#define CONFIG_MQTT_CLIENT_ID          "" STR(_CONFIG_MQTT_CLIENT_ID) ""
-
-/** Topics for temperature and pressure. */
-#define CONFIG_MQTT_TOPIC_TEMPERATURE   "kitchen/temperature"
-#define CONFIG_MQTT_TOPIC_PRESSURE      "kitchen/pressure"
-
-#define CONFIG_MQTT_NODE_PRESENCE_TOPIC        "presence/" STR(_CONFIG_MQTT_CLIENT_ID)
-
 #endif

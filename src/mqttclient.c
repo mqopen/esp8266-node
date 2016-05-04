@@ -25,6 +25,7 @@
 #include "umqtt.h"
 #include "actsig.h"
 #include "sensor.h"
+#include "common.h"
 #include "mqttclient.h"
 
 /** Timer for ending MQTT Keep Alive messages. */
@@ -69,8 +70,8 @@ static struct umqtt_connection _mqtt = {
 /** MQTT connection configuration. */
 static struct umqtt_connect_config _connection_config = {
     .keep_alive = CONFIG_MQTT_KEEPALIVE_CONNECT_INTERVAL,
-    .client_id = CONFIG_MQTT_CLIENT_ID,
-    .will_topic = CONFIG_MQTT_NODE_PRESENCE_TOPIC,
+    .client_id = CONFIG_GENERAL_DEVICE_NAME,
+    .will_topic = TOPIC_PRESENCE(CONFIG_GENERAL_DEVICE_NAME),
     .will_message = (uint8_t *) CONFIG_MQTT_PRESENCE_OFFLINE,
     .will_message_len = sizeof(CONFIG_MQTT_PRESENCE_OFFLINE),
     .flags = _BV(UMQTT_OPT_RETAIN),
@@ -289,7 +290,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, 
 
         /* Send presence message. */
         umqtt_publish(&_mqtt,
-                        CONFIG_MQTT_NODE_PRESENCE_TOPIC,
+                        TOPIC_PRESENCE(CONFIG_GENERAL_DEVICE_NAME),
                         (uint8_t *) CONFIG_MQTT_PRESENCE_ONLINE,
                         sizeof(CONFIG_MQTT_PRESENCE_ONLINE),
                         _BV(UMQTT_OPT_RETAIN));
