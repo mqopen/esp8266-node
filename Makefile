@@ -741,7 +741,7 @@ firmware: firmware.elf
 
 PHONY += upload
 upload:
-	$(ESPTOOL) write_flash 0 esp8266-firmware.elf-0x00000.bin 0x40000 esp8266-firmware.elf-0x40000.bin
+	$(ESPTOOL) write_flash 0 firmware.elf-0x00000.bin 0x40000 firmware.elf-0x40000.bin
 
 # The actual objects are generated when descending,
 # make sure no implicit rule kicks in
