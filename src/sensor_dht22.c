@@ -19,6 +19,7 @@
 #include <osapi.h>
 #include "sensor.h"
 #include "dht22.h"
+#include "common.h"
 #include "sensor_dht22.h"
 
 /* Check that at least one sensor reading is enabled. */
@@ -46,14 +47,14 @@ static char _sensor_dht22_data_humidity_str[SENSOR_VALUE_BUFFER_SIZE];
 static struct sensor_str _sensor_dht22_topics[] = {
 #if ENABLE_SENSOR_DHT22_TEMPERATURE
     {
-        .data = CONFIG_SENSOR_DHT22_TEMPERATURE_TOPIC,
-        .len = sizeof(CONFIG_SENSOR_DHT22_TEMPERATURE_TOPIC),
+        .data = TOPIC(CONFIG_SENSOR_DHT22_TEMPERATURE_TOPIC),
+        .len = sizeof(TOPIC(CONFIG_SENSOR_DHT22_TEMPERATURE_TOPIC)),
     },
 #endif
 #if ENABLE_SENSOR_DHT22_HUMIDITY
     {
-        .data = CONFIG_SENSOR_DHT22_HUMIDITY_TOPIC,
-        .len = sizeof(CONFIG_SENSOR_DHT22_HUMIDITY_TOPIC),
+        .data = TOPIC(CONFIG_SENSOR_DHT22_HUMIDITY_TOPIC),
+        .len = sizeof(TOPIC(CONFIG_SENSOR_DHT22_HUMIDITY_TOPIC)),
     },
 #endif
 };

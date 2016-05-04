@@ -19,6 +19,7 @@
 #include <osapi.h>
 #include "sensor.h"
 #include "bmp180.h"
+#include "common.h"
 #include "sensor_bmp180.h"
 
 /* Oversampling setting */
@@ -53,14 +54,14 @@ static char _sensor_bmp180_data_pressure_str[SENSOR_VALUE_BUFFER_SIZE];
 static struct sensor_str _sensor_bmp180_topics[] = {
 #if ENABLE_SENSOR_BMP180_TEMPERATURE
     {
-        .data = CONFIG_SENSOR_BMP180_TEMPERATURE_TOPIC,
-        .len = sizeof(CONFIG_SENSOR_BMP180_TEMPERATURE_TOPIC),
+        .data = TOPIC(CONFIG_SENSOR_BMP180_TEMPERATURE_TOPIC),
+        .len = sizeof(TOPIC(CONFIG_SENSOR_BMP180_TEMPERATURE_TOPIC)),
     },
 #endif
 #if CONFIG_SENSOR_BMP180_PRESSURE
     {
-        .data = CONFIG_SENSOR_BMP180_PRESSURE_TOPIC,
-        .len = sizeof(CONFIG_SENSOR_BMP180_PRESSURE_TOPIC),
+        .data = TOPIC(CONFIG_SENSOR_BMP180_PRESSURE_TOPIC),
+        .len = sizeof(TOPIC(CONFIG_SENSOR_BMP180_PRESSURE_TOPIC)),
     },
 #endif
 };

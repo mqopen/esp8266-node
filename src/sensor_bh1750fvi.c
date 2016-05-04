@@ -24,8 +24,8 @@
 static char _sensor_bh1750fvi_data_temperature_str[SENSOR_VALUE_BUFFER_SIZE];
 
 static struct sensor_str _sensor_bh1750fvi_topics = {
-    .data = CONFIG_SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC,
-    .len = sizeof(CONFIG_SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC),
+    .data = TOPIC(CONFIG_SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC),
+    .len = sizeof(TOPIC(CONFIG_SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC)),
 };
 
 static struct sensor_str _sensor_bh1750fvi_data = {
