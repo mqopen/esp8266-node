@@ -1,6 +1,8 @@
 #ifndef __SENSOR_H__
 #define __SENSOR_H__
 
+#include <c_types.h>
+
 /**
  * Sensor abstraction layer.
  */
