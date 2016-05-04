@@ -20,10 +20,6 @@
 
 #include "common.h"
 
-/** Wi-Fi configuration. */
-//#define CONFIG_WIFI_SSID        "evzen"
-//#define CONFIG_WIFI_PASSWORD    "ADADADADAD"
-
 /** Sensor IP. */
 #define CONFIG_USE_DHCP             0
 #if ! CONFIG_USE_DHCP
@@ -48,15 +44,8 @@
 #define CONFIG_MQTT_BROKER_IP_ADDRESS1  0
 #define CONFIG_MQTT_BROKER_IP_ADDRESS2  0
 #define CONFIG_MQTT_BROKER_IP_ADDRESS3  21
-//#define CONFIG_MQTT_BROKER_IP_PORT      1883
 
 #define CONFIG_PROC_TASK_QUEUE_LENGTH   1
-
-/** MQTT mesaage timing. */
-//#define CONFIG_MQTT_KEEP_ALIVE_INTERVAL_MS  30000
-//#define CONFIG_MQTT_PUBLISH_INTERVAL_MS     2000
-
-//#define CONFIG_MQTT_KEEP_ALIVE          60
 
 /** MQTT client ID. */
 #define _CONFIG_MQTT_CLIENT_ID         chrudim-kitchen-bmp
@@ -67,10 +56,5 @@
 #define CONFIG_MQTT_TOPIC_PRESSURE      "kitchen/pressure"
 
 #define CONFIG_MQTT_NODE_PRESENCE_TOPIC        "presence/" STR(_CONFIG_MQTT_CLIENT_ID)
-//#define CONFIG_MQTT_NODE_PRESENCE_MSG_ONLINE   "online"
-//#define CONFIG_MQTT_NODE_PRESENCE_MSG_OFFLINE  "offline"
-
-/** LED notify interval. */
-//#define CONFIG_MQTT_ACTIVE_LED_INTERVAL_MS  100
 
 #endif
