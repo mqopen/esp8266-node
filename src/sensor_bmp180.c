@@ -4,6 +4,11 @@
 #include "bmp180.h"
 #include "sensor_bmp180.h"
 
+/* Check that at least one sensor reading is enabled. */
+#if ! ENABLE_SENSOR_BMP180_TEMPERATURE && ! CONFIG_SENSOR_BMP180_PRESSURE
+#error No sensor reading is enabled.
+#endif
+
 #if ENABLE_SENSOR_BMP180_TEMPERATURE
 static char _sensor_bmp180_data_temperature_str[SENSOR_VALUE_BUFFER_SIZE];
 #endif
