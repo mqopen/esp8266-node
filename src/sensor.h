@@ -30,6 +30,8 @@
   #include "sensor_bmp180.h"
 #elif ENABLE_SENSOR_BH1750FVI
   #include "sensor_bh1750fvi.h"
+#elif ENABLE_SENSOR_DS18B20
+  #include "sensor_ds18b20.h"
 #else
   #error Unsupported sensor.
 #endif
@@ -100,7 +102,7 @@ extern char *sensor_get_value(uint8_t index, uint8_t *buf_len);
 #define __sensor_get_value_scalar(__value_struct) \
     char *sensor_get_value(uint8_t index, uint8_t *buf_len) { \
         *buf_len = __value_struct.len; \
-        return __value_array.data; \
+        return __value_struct.data; \
     }
 
 #endif

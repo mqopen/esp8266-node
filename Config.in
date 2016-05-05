@@ -119,7 +119,12 @@ config SENSOR_BMP180
 config SENSOR_BH1750FVI
 	bool "BH1750FVI Ambient light sensor"
 	select BUS_I2C
+config SENSOR_DS18B20
+	bool "DS18B20 Teperature sensor"
+	select BUS_ONEWIRE
 endchoice
+
+# DHT22 sensor settings.
 config SENSOR_DHT22_TEMPERATURE
 	bool "Temperature"
 	depends on SENSOR_DHT22
@@ -190,6 +195,12 @@ config SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC
 	string "BMP180 Ambient light topic"
 	depends on SENSOR_BH1750FVI
 	default "alight"
+
+# DS18B20 sensor settings.
+config SENSOR_DS18B20_TEMPERATURE_TOPIC
+	string "DS18B20 Teperature topic"
+	depends on SENSOR_DS18B20
+	default "temperature"
 endmenu
 
 menu "Bus Settings"
