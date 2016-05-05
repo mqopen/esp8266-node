@@ -79,4 +79,28 @@ extern char *sensor_get_topic(uint8_t index, uint8_t *buf_len);
  */
 extern char *sensor_get_value(uint8_t index, uint8_t *buf_len);
 
+#define __sensor_get_topic_array(__topic_array) \
+    char *sensor_get_topic(uint8_t index, uint8_t *buf_len) { \
+        *buf_len = __topic_array[index].len; \
+        return __topic_array[index].data; \
+    }
+
+#define __sensor_get_value_array(__value_array) \
+    char *sensor_get_value(uint8_t index, uint8_t *buf_len) { \
+        *buf_len = __value_array[index].len; \
+        return __value_array[index].data; \
+    }
+
+#define __sensor_get_topic_scalar(__topic_struct) \
+    char *sensor_get_topic(uint8_t index, uint8_t *buf_len) { \
+        *buf_len = __topic_struct.len; \
+        return __topic_struct.data; \
+    }
+
+#define __sensor_get_value_scalar(__value_struct) \
+    char *sensor_get_value(uint8_t index, uint8_t *buf_len) { \
+        *buf_len = __value_struct.len; \
+        return __value_array.data; \
+    }
+
 #endif

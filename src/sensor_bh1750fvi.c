@@ -69,12 +69,5 @@ enum sensor_io_result sensor_read(void) {
     return SENSOR_IO_ERROR;
 }
 
-char *sensor_get_topic(uint8_t index, uint8_t *buf_len) {
-    *buf_len = _sensor_bh1750fvi_topics.len;
-    return _sensor_bh1750fvi_topics.data;
-}
-
-char *sensor_get_value(uint8_t index, uint8_t *buf_len) {
-    *buf_len = _sensor_bh1750fvi_data.len;
-    return _sensor_bh1750fvi_data.data;
-}
+__sensor_get_topic_scalar(_sensor_bh1750fvi_topics)
+__sensor_get_value_scalar(_sensor_bh1750fvi_data)

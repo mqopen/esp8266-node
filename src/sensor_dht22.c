@@ -125,12 +125,5 @@ enum sensor_io_result sensor_read(void) {
     return SENSOR_IO_ERROR;
 }
 
-char *sensor_get_topic(uint8_t index, uint8_t *buf_len) {
-    *buf_len = _sensor_dht22_topics[index].len;
-    return _sensor_dht22_topics[index].data;
-}
-
-char *sensor_get_value(uint8_t index, uint8_t *buf_len) {
-    *buf_len = _sensor_dht22_data[index].len;
-    return _sensor_dht22_data[index].data;
-}
+__sensor_get_topic_array(_sensor_dht22_topics)
+__sensor_get_value_array(_sensor_dht22_data)
