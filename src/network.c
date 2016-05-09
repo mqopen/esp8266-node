@@ -69,20 +69,19 @@ static void ICACHE_FLASH_ATTR _network_config_address(void) {
 #error "Not implemented yet"
 #else
     wifi_set_opmode(STATIONAP_MODE);
-    if (!wifi_station_dhcpc_stop())
+    uint8_t ret;
+    ret = wifi_station_dhcpc_stop();
+    if (!ret)
         os_printf("dhcpc stop failed\r\n");
-    IP4_ADDR(&ip_info.ip, CONFIG_CLIENT_IP_ADDRESS0,
-                            CONFIG_CLIENT_IP_ADDRESS1,
-                            CONFIG_CLIENT_IP_ADDRESS2,
-                            CONFIG_CLIENT_IP_ADDRESS3);
-    IP4_ADDR(&ip_info.gw, CONFIG_CLIENT_IP_GATEWAY0,
-                            CONFIG_CLIENT_IP_GATEWAY1,
-                            CONFIG_CLIENT_IP_GATEWAY2,
-                            CONFIG_CLIENT_IP_GATEWAY3);
-    IP4_ADDR(&ip_info.netmask, CONFIG_CLIENT_IP_NETMASK0,
-                                CONFIG_CLIENT_IP_NETMASK1,
-                                CONFIG_CLIENT_IP_NETMASK2,
-                                CONFIG_CLIENT_IP_NETMASK3);
+    ret = ipaddr_aton(CONFIG_NETWORK_IP_ADDRESS, &ip_info.ip);
+    if (!ret)
+        os_printf("network IP address parse failed\r\n");
+    ret = ipaddr_aton(CONFIG_NETWORK_NETMASK, &ip_info.netmask);
+    if (!ret)
+        os_printf("network mask parse failed\r\n");
+    ret = ipaddr_aton(CONFIG_NETWORK_GATEWAY, &ip_info.gw);
+    if (!ret)
+        os_printf("network gateway parse failed\r\n");
     wifi_set_ip_info(STATION_IF, &ip_info);
 #endif
 }

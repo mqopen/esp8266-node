@@ -221,15 +221,15 @@ void ICACHE_FLASH_ATTR mqttclient_stop(void) {
 
 static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
     struct ip_addr ip;
+    uint8_t ret;
     _mqttclient_espconn.type = ESPCONN_TCP;
     _mqttclient_espconn.state = ESPCONN_NONE;
     _mqttclient_espconn.reverse = &_mqttclient_espconn;
     _mqttclient_espconn.proto.tcp->local_port = espconn_port();
     _mqttclient_espconn.proto.tcp->remote_port = CONFIG_MQTT_BROKER_PORT;
-    IP4_ADDR(&ip, CONFIG_MQTT_BROKER_IP_ADDRESS0,
-                    CONFIG_MQTT_BROKER_IP_ADDRESS1,
-                    CONFIG_MQTT_BROKER_IP_ADDRESS2,
-                    CONFIG_MQTT_BROKER_IP_ADDRESS3);
+    ret = ipaddr_aton(CONFIG_MQTT_BROKER_ADDRESS, &ip);
+    if (!ret)
+        os_printf("broker IP address parse failed\r\n");
     os_memcpy(_mqttclient_espconn.proto.tcp->remote_ip, &ip, sizeof(struct ip_addr));
 
     espconn_regist_connectcb(&_mqttclient_espconn, _mqttclient_connect_callback);
