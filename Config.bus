@@ -1,0 +1,37 @@
+menu "Bus Settings"
+config BUS_I2C
+	bool "Enable I2C"
+	default n
+	help
+	  Enable I2C bus.
+
+if BUS_I2C
+config BUS_I2C_GPIO_SDA
+	int "I2C SDA Pin"
+	default 0
+	help
+	  Configure I2C SDA GPIO pin number.
+
+config BUS_I2C_GPIO_SCL
+	int "I2C SCL Pin"
+	default 2
+	help
+	  Configure I2C SCL GPIO pin number.
+
+endif # BUS_I2C
+
+config BUS_ONEWIRE
+	bool "Enable onewire bus"
+	default n
+	help
+	  Enable Dalla OneWire bus.
+
+if BUS_ONEWIRE
+config BUS_ONEWIRE_GPIO_DQ
+	int "Onewire DQ pin"
+	default 2
+	help
+	  OneWire SQ GPIO pin number.
+
+endif # BUS_ONEWIRE
+endmenu

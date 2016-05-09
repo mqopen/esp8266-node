@@ -1,0 +1,29 @@
+menu "Network Settings"
+config NETWORK_USE_DHCP
+	bool "Use DHCP"
+	default n
+	help
+	  Configure wheter sensor should requset DHCP server for IP address or
+	  it should be cnfigured statically.
+
+if !NETWORK_USE_DHCP
+config NETWORK_IP_ADDRESS
+	string "Device static IP address"
+	default "192.168.1.10"
+	help
+	  Configure device IP address.
+
+config NETWORK_NETMASK
+	string "Device netmask"
+	default "255.255.255.0"
+	help
+	  Configure network mask.
+
+config NETWORK_GATEWAY
+	string "Gateway"
+	default "192.168.1.1"
+	help
+	  Configure network gateway.
+
+endif # !NETWORK_USE_DHCP
+endmenu

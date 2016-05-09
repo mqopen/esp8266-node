@@ -1,0 +1,20 @@
+menu "General Settings"
+config GENERAL_DEVICE_NAME
+	string "Device name"
+	default "node"
+	help
+	  Specify device name.
+
+	  Device name is used as MQTT client name, when device connects to MQTT
+	  broker. It is also used for generating info topics, such as device
+	  presence.
+
+config GENERAL_DEVICE_LOCATION
+	string "Device location"
+	default "room"
+	help
+	  Location of device in designated area.
+
+	  Location is used to build MQTT topic for the sensor.
+
+endmenu

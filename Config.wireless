@@ -1,0 +1,14 @@
+menu "Wireless Settings"
+config WIRELESS_SSID
+	string "Access point SSID"
+	default "hostapd"
+	help
+	  Configure Wi-Fi access point SSID string.
+
+config WIRELESS_PSK
+	string "Access point password"
+	default "password"
+	help
+	  Configure Wi-Fi access point WPA password.
+
+endmenu

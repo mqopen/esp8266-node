@@ -1,0 +1,176 @@
+menu "Sensor Settings"
+choice
+	prompt "Used sensor"
+	default SENSOR_DHT22
+	help
+	  Configure connected sensor.
+
+config SENSOR_DHT22
+	bool "DHT22"
+	select BUS_ONEWIRE
+	help
+	  Configure to use DHT22 humidity and temperature sensor.
+
+config SENSOR_BMP180
+	bool "BMP180"
+	select BUS_I2C
+	help
+	  Configure to use BMP180 barometric pressure and temperature sensor.
+
+config SENSOR_BH1750FVI
+	bool "BH1750FVI"
+	select BUS_I2C
+	help
+	  Configure to use BH1750FVI ambient light sensor.
+
+config SENSOR_DS18B20
+	bool "DS18B20"
+	select BUS_ONEWIRE
+	help
+	  Configure to use DS18B20 temperature sensor.
+
+endchoice
+
+#
+# DHT22 sensor settings.
+#
+config SENSOR_DHT22_TEMPERATURE
+	bool "Temperature"
+	depends on SENSOR_DHT22
+	default y
+	help
+	  Enable sensor temperature reading.
+
+if SENSOR_DHT22_TEMPERATURE
+config SENSOR_DHT22_TEMPERATURE_TOPIC
+	string "DHT22 Temperature topic"
+	depends on SENSOR_DHT22 && SENSOR_DHT22_TEMPERATURE
+	default "temperature"
+	help
+	  Sensor temperature topic.
+
+endif # SENSOR_DHT22_TEMPERATURE
+
+config SENSOR_DHT22_HUMIDITY
+	bool "Humidity"
+	depends on SENSOR_DHT22
+	default y
+	help
+	  Enable sensor humidity reading.
+
+if SENSOR_DHT22_HUMIDITY
+config SENSOR_DHT22_HUMIDITY_TOPIC
+	string "DHT22 Humidity topic"
+	depends on SENSOR_DHT22 && SENSOR_DHT22_HUMIDITY
+	default "humidity"
+	help
+	  Sensor humidity topic.
+
+endif # SENSOR_DHT22_HUMIDITY
+
+#
+# BMP180 sensor settings.
+#
+choice
+	prompt "BMP180 oversampling"
+	default SENSOR_BMP180_OVERSAMPLING_ULTRAHIGH
+	depends on SENSOR_BMP180
+	help
+	  Configure BMP180 oversampling setting.
+
+config SENSOR_BMP180_OVERSAMPLING_ULTRALOW
+	bool "Ultra low (single)"
+	help
+	  Single oversampling setting.
+
+config SENSOR_BMP180_OVERSAMPLING_STANDARD
+	bool "Standard (2 samples)"
+	help
+	  Standard oversampling setting.
+
+config SENSOR_BMP180_OVERSAMPLING_HIGH
+	bool "High (4 samples)"
+	help
+	  High oversampling setting.
+
+config SENSOR_BMP180_OVERSAMPLING_ULTRAHIGH
+	bool "Ultra high (8 samples)"
+	help
+	 Ultra high oversampling setting.
+
+endchoice
+
+config SENSOR_BMP180_TEMPERATURE
+	bool "Temperature"
+	depends on SENSOR_BMP180
+	default y
+	help
+	  Enable sensor temperature reading.
+
+if SENSOR_BMP180_TEMPERATURE
+config SENSOR_BMP180_TEMPERATURE_TOPIC
+	string "BMP180 Temperature topic"
+	depends on SENSOR_BMP180 && SENSOR_BMP180_TEMPERATURE
+	default "temperature"
+	help
+	  Sensor temperature topic.
+
+endif # SENSOR_BMP180_TEMPERATURE
+
+config SENSOR_BMP180_PRESSURE
+	bool "Pressure"
+	depends on SENSOR_BMP180
+	default y
+	help
+	  Enable sensor pressure reading.
+
+if SENSOR_BMP180_PRESSURE
+config SENSOR_BMP180_PRESSURE_TOPIC
+	string "BMP180 Pressure topic"
+	depends on SENSOR_BMP180 && SENSOR_BMP180_PRESSURE
+	default "pressure"
+	help
+	  Sensor pressure topic.
+
+endif # SENSOR_BMP180_PRESSURE
+
+#
+# BH1750FVI sensor settings.
+#
+choice
+	prompt "BH1750FVI I2C address"
+	default SENSOR_BH1750FVI_I2C_ADDRESS_0X23
+	depends on SENSOR_BH1750FVI
+	help
+	  Configure sensor I2C address.
+
+config SENSOR_BH1750FVI_I2C_ADDRESS_0X23
+	bool "0x23"
+	help
+	  Use 0x23 I2C address.
+
+config SENSOR_BH1750FVI_I2C_ADDRESS_0X5C
+	bool "0x5c"
+	help
+	  Use 0x5c I2C address.
+
+endchoice
+
+config SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC
+	string "BMP180 Ambient light topic"
+	depends on SENSOR_BH1750FVI
+	default "alight"
+	help
+	  Sensor ambient light topic.
+
+#
+# DS18B20 sensor settings.
+#
+config SENSOR_DS18B20_TEMPERATURE_TOPIC
+	string "DS18B20 Teperature topic"
+	depends on SENSOR_DS18B20
+	default "temperature"
+	help
+	  Sensor temperature topic.
+
+endmenu
