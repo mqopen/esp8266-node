@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SENSOR__DS18B20_H__
-#define __SENSOR__DS18B20_H__
+#ifndef __SENSOR_DS18B20_H__
+#define __SENSOR_DS18B20_H__
 
 #define sensor_init ds18b20_init
 
