@@ -1,10 +1,13 @@
 # ESP8266 node
 
-Firmware for mqopen [ESP8266](http://www.esp8266.com/) sensor node. This code is part of [mqopen](http://mqopen.org/) project. This firmware supports various sensors:
+Firmware for mqopen [ESP8266](http://www.esp8266.com/) sensor node. This code is part of [mqopen](http://mqopen.org/) project.
 
-  - [BMP180](https://www.bosch-sensortec.com/bst/products/all_products/bmp180) Barometric pressure sensor.
-  - [DHT22](http://www.aosong.com/en/products/details.asp?id=117) Humidity and temperature sensor.
-  - [BH1750FVI](http://www.rohm.com/web/global/products/-/product/BH1750FVI) Ambient light sensor.
+Various sensors are supported:
+
+ - [BMP180](https://www.bosch-sensortec.com/bst/products/all_products/bmp180) Barometric pressure sensor.
+ - [DHT22](http://www.aosong.com/en/products/details.asp?id=117) Humidity and temperature sensor.
+ - [BH1750FVI](http://www.rohm.com/web/global/products/-/product/BH1750FVI) Ambient light sensor.
+ - [DS18B20](https://www.maximintegrated.com/en/products/analog/sensors-and-sensor-interface/DS18B20.html) Temperature sensor.
 
 ## Dependencies
 
@@ -13,11 +16,9 @@ on your computer.
 
 ## Configure source tree
 
-From root of this repository run following command:
+To configure firmware source tree, run following command:
 
     $ make menuconfig
-
-And configure firmware values.
 
 ## Build firmware
 
