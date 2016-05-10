@@ -15,8 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <c_types.h>
+#include <osapi.h>
 #include "onewire.h"
 #include "ds18b20.h"
+
+/** For temperature conversion timeouting. Allow some more miliseconds than datasheet defines. */
+#define DS18B20_TEMP_CONVERSION_TIMEOUT_TOLERATION 10
+
+#if ENABLE_SENSOR_DS18B20_TEMPRESOLUTION_9BIT
+  #define DS18B20_TEMP_CONVERSION_TIMEOUT   (94 + DS18B20_TEMP_CONVERSION_TIMEOUT_TOLERATION)
+#elif ENABLE_SENSOR_DS18B20_TEMPRESOLUTION_10BIT
+  #define DS18B20_TEMP_CONVERSION_TIMEOUT   (185 + DS18B20_TEMP_CONVERSION_TIMEOUT_TOLERATION)
+#elif ENABLE_SENSOR_DS18B20_TEMPRESOLUTION_11BIT
+  #define DS18B20_TEMP_CONVERSION_TIMEOUT   (375 + DS18B20_TEMP_CONVERSION_TIMEOUT_TOLERATION)
+#elif ENABLE_SENSOR_DS18B20_TEMPRESOLUTION_12BIT
+  #define DS18B20_TEMP_CONVERSION_TIMEOUT   (750 + DS18B20_TEMP_CONVERSION_TIMEOUT_TOLERATION)
+#else
+  #error Unsupported bit resolution!
+#endif
 
 void ds18b20_init(void) {
 }
@@ -26,14 +43,21 @@ enum ds18b20_io_result ds18b20_read(double *value) {
     uint8_t _temperature_h;
 
     if (!onewire_reset())
-        return DS18B20_ERROR;
+        return DS18B20_IO_ERROR;
     onewire_write(DS18B20_CMD_SKIPROM);
     onewire_write(DS18B20_CMD_CONVERTTEMP);
 
-    while (!onewire_read_bit());
+    uint16_t _timeout = DS18B20_TEMP_CONVERSION_TIMEOUT;
+    while (!onewire_read_bit()) {
+        os_delay_us(1000);
+        _timeout--;
+        if (_timeout == 0) {
+            return DS18B20_IO_TEMP_CONVERSION_TIMEOUT;
+        }
+    }
 
     if (!onewire_reset())
-        return DS18B20_ERROR;
+        return DS18B20_IO_ERROR;
     onewire_write(DS18B20_CMD_SKIPROM);
     onewire_write(DS18B20_CMD_RSCRATCHPAD);
 
@@ -42,5 +66,5 @@ enum ds18b20_io_result ds18b20_read(double *value) {
     _temperature_h = onewire_read();
 
     *value = ((_temperature_h << 8) | _temperature_l) * 0.0625;
-    return DS18B20_OK;
+    return DS18B20_IO_OK;
 }

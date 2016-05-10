@@ -49,6 +49,8 @@ void onewire_init();
 
 /**
  * Perform onewire reset sequence.
+ *
+ * @return Non-zero if presence pulse was detected, zero otherwise.
  */
 uint8_t onewire_reset(void);
 

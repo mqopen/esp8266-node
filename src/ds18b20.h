@@ -31,8 +31,9 @@
 #define DS18B20_CMD_ALARMSEARCH     0xec
 
 enum ds18b20_io_result {
-    DS18B20_OK,
-    DS18B20_ERROR,
+    DS18B20_IO_OK,                          /**< IO was OK. */
+    DS18B20_IO_ERROR,
+    DS18B20_IO_TEMP_CONVERSION_TIMEOUT,     /**< Temperature conversion timeouted. */
 };
 
 void ds18b20_init(void);

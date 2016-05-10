@@ -166,6 +166,35 @@ config SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC
 #
 # DS18B20 sensor settings.
 #
+choice
+	prompt "Temperature resolution"
+	depends on SENSOR_DS18B20
+	default SENSOR_DS18B20_TEMPRESOLUTION_12BIT
+	help
+	  Configure DS18B20 temperature resolution.
+
+config SENSOR_DS18B20_TEMPRESOLUTION_9BIT
+	bool "9-bit resolution"
+	help
+	  Use 9-bit temperature resolution
+
+config SENSOR_DS18B20_TEMPRESOLUTION_10BIT
+	bool "10-bit resolution"
+	help
+	  Use 10-bit temperature resolution
+
+config SENSOR_DS18B20_TEMPRESOLUTION_11BIT
+	bool "11-bit resolution"
+	help
+	  Use 11-bit temperature resolution
+
+config SENSOR_DS18B20_TEMPRESOLUTION_12BIT
+	bool "12-bit resolution"
+	help
+	  Use 12-bit temperature resolution
+
+endchoice
+
 config SENSOR_DS18B20_TEMPERATURE_TOPIC
 	string "DS18B20 Teperature topic"
 	depends on SENSOR_DS18B20

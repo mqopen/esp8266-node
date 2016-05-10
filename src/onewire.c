@@ -70,7 +70,6 @@ uint8_t onewire_reset(void) {
     _onewire_dq_high();
     os_delay_us(70);
     _onewire_dq_input();
-
     presence = !_onewire_dq_read();
     os_delay_us(410);
     _onewire_dq_output();

@@ -42,14 +42,15 @@ enum sensor_io_result sensor_read(void) {
     double _value;
     enum ds18b20_io_result _io_result = ds18b20_read(&_value);
     switch (_io_result) {
-        case DS18B20_OK:
+        case DS18B20_IO_OK:
             _len = os_sprintf(
                 _sensor_ds18b20_data.data,
                 "%d.%d",
                 (int16_t) _value, (int16_t) (_value * 1000) % 1000);
             _sensor_ds18b20_data.len = _len;
             return SENSOR_IO_OK;
-        case DS18B20_ERROR:
+        case DS18B20_IO_ERROR:
+        case DS18B20_IO_TEMP_CONVERSION_TIMEOUT:
             _len = os_sprintf(_buf, "E_READ");
             break;
     }
