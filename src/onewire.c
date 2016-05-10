@@ -51,6 +51,14 @@ static inline void _onewire_dq_output(void);
 static inline uint8_t _onewire_dq_read(void);
 
 void onewire_init() {
+    ETS_GPIO_INTR_DISABLE() ;
+    PIN_FUNC_SELECT(ONEWIRE_DQ_MUX, ONEWIRE_DQ_FUNC);
+    GPIO_REG_WRITE(
+        GPIO_PIN_ADDR(
+            GPIO_ID_PIN(ONEWIRE_DQ_GPIO)),
+            GPIO_REG_READ(GPIO_PIN_ADDR(GPIO_ID_PIN(ONEWIRE_DQ_GPIO))) | GPIO_PIN_PAD_DRIVER_SET(GPIO_PAD_DRIVER_ENABLE)); //open drain;
+    GPIO_REG_WRITE(GPIO_ENABLE_ADDRESS, GPIO_REG_READ(GPIO_ENABLE_ADDRESS) | (1 << ONEWIRE_DQ_GPIO));
+    ETS_GPIO_INTR_ENABLE() ;
     _onewire_dq_high();
     _onewire_dq_output();
 }
@@ -112,21 +120,19 @@ uint8_t onewire_read_bit(void) {
 }
 
 static inline void _onewire_dq_high(void) {
-    GPIO_OUTPUT_SET(ONEWIRE_DQ_GPIO, 1);
+    gpio_output_set(1 << ONEWIRE_DQ_GPIO, 0, 1 << ONEWIRE_DQ_GPIO, 0);
 }
 
 static inline void _onewire_dq_low(void) {
-    GPIO_OUTPUT_SET(ONEWIRE_DQ_GPIO, 0);
+    gpio_output_set(0, 1 << ONEWIRE_DQ_GPIO, 1 << ONEWIRE_DQ_GPIO, 0);
 }
 
 static inline void _onewire_dq_input(void) {
-    GPIO_DIS_OUTPUT(ONEWIRE_DQ_GPIO);
-    PIN_PULLUP_EN(ONEWIRE_DQ_MUX);
 }
 
 static inline void _onewire_dq_output(void) {
 }
 
 static inline uint8_t _onewire_dq_read(void) {
-    return GPIO_INPUT_GET(ONEWIRE_DQ_GPIO);
+    return GPIO_INPUT_GET(GPIO_ID_PIN(ONEWIRE_DQ_GPIO));
 }

@@ -29,7 +29,7 @@ void bus_init(void) {
     i2c_master_gpio_init();
     i2c_master_init();
 #endif
-#if ENABLE_BUS_I2C
+#if ENABLE_BUS_ONEWIRE
     onewire_init();
 #endif
 }
