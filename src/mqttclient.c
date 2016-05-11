@@ -73,7 +73,7 @@ static struct umqtt_connect_config _connection_config = {
     .client_id = CONFIG_GENERAL_DEVICE_NAME,
     .will_topic = TOPIC_PRESENCE(CONFIG_GENERAL_DEVICE_NAME),
     .will_message = (uint8_t *) CONFIG_MQTT_PRESENCE_OFFLINE,
-    .will_message_len = sizeof(CONFIG_MQTT_PRESENCE_OFFLINE),
+    .will_message_len = sizeof(CONFIG_MQTT_PRESENCE_OFFLINE) - 1,
     .flags = _BV(UMQTT_OPT_RETAIN),
 };
 
@@ -292,7 +292,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, 
         umqtt_publish(&_mqtt,
                         TOPIC_PRESENCE(CONFIG_GENERAL_DEVICE_NAME),
                         (uint8_t *) CONFIG_MQTT_PRESENCE_ONLINE,
-                        sizeof(CONFIG_MQTT_PRESENCE_ONLINE),
+                        sizeof(CONFIG_MQTT_PRESENCE_ONLINE) - 1,
                         _BV(UMQTT_OPT_RETAIN));
     }
     _mqttclient_data_send();
