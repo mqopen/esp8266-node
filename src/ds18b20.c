@@ -67,9 +67,15 @@ enum ds18b20_io_result ds18b20_read(int16_t *value) {
     _temperature_l = onewire_read();
     _temperature_h = onewire_read();
 
-    _temperature_integral = ((_temperature_h << 8) | _temperature_l) >> 4;
-    _temperature_decimal = (_temperature_l & 0x0f) * 0.625;
-
+    _temperature_integral = (_temperature_h << 8) | _temperature_l;
+    _temperature_integral >>= 4;
+    if (_temperature_integral < 0) {
+        _temperature_integral += 1;
+        _temperature_decimal = _temperature_l | 0xf0;
+    } else {
+        _temperature_decimal = _temperature_l & 0x0f;
+    }
+    _temperature_decimal *= 0.625;
     *value = (_temperature_integral * 10) + _temperature_decimal;
     return DS18B20_IO_OK;
 }

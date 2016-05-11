@@ -46,9 +46,9 @@ enum sensor_io_result sensor_read(void) {
             _temperature += CONFIG_SENSOR_DS18B20_TEMPERATURE_OFFSET;
             _len = os_sprintf(
                 _sensor_ds18b20_data.data,
-                "%d.%d",
-                _temperature / 10,
-                _temperature % 10);
+                _temperature < 0 ? "-%d.%d" : "%d.%d",
+                abs(_temperature) / 10,
+                abs(_temperature) % 10);
             _sensor_ds18b20_data.len = _len;
             return SENSOR_IO_OK;
         case DS18B20_IO_ERROR:
