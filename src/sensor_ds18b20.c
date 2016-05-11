@@ -43,6 +43,7 @@ enum sensor_io_result sensor_read(void) {
     enum ds18b20_io_result _io_result = ds18b20_read(&_temperature);
     switch (_io_result) {
         case DS18B20_IO_OK:
+            _temperature += CONFIG_SENSOR_DS18B20_TEMPERATURE_OFFSET;
             _len = os_sprintf(
                 _sensor_ds18b20_data.data,
                 "%d.%d",
