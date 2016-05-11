@@ -44,6 +44,6 @@ void ds18b20_init(void);
  * @param value Address where to store temperatue.
  * @return Result of read operation.
  */
-enum ds18b20_io_result ds18b20_read(double *value);
+enum ds18b20_io_result ds18b20_read(int16_t *value);
 
 #endif

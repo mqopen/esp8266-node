@@ -39,14 +39,15 @@ static struct sensor_str _sensor_ds18b20_data = {
 enum sensor_io_result sensor_read(void) {
     uint8_t _len = 0;
     char _buf[SENSOR_VALUE_BUFFER_SIZE];
-    double _value;
-    enum ds18b20_io_result _io_result = ds18b20_read(&_value);
+    int16_t _temperature;
+    enum ds18b20_io_result _io_result = ds18b20_read(&_temperature);
     switch (_io_result) {
         case DS18B20_IO_OK:
             _len = os_sprintf(
                 _sensor_ds18b20_data.data,
                 "%d.%d",
-                (int16_t) _value, (int16_t) (_value * 1000) % 1000);
+                _temperature / 10,
+                _temperature % 10);
             _sensor_ds18b20_data.len = _len;
             return SENSOR_IO_OK;
         case DS18B20_IO_ERROR:

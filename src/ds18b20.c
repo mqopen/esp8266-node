@@ -38,9 +38,11 @@
 void ds18b20_init(void) {
 }
 
-enum ds18b20_io_result ds18b20_read(double *value) {
-    uint8_t _temperature_l;
+enum ds18b20_io_result ds18b20_read(int16_t *value) {
     uint8_t _temperature_h;
+    uint8_t _temperature_l;
+    int16_t _temperature_integral;
+    int8_t _temperature_decimal;
 
     if (!onewire_reset())
         return DS18B20_IO_ERROR;
@@ -65,6 +67,14 @@ enum ds18b20_io_result ds18b20_read(double *value) {
     _temperature_l = onewire_read();
     _temperature_h = onewire_read();
 
-    *value = ((_temperature_h << 8) | _temperature_l) * 0.0625;
+    _temperature_integral = ((_temperature_h << 8) | _temperature_l) >> 4;
+    //_temperature_integral = _temperature_h;
+    //_temperature_integral <<= 8;
+    //_temperature_integral |= (_temperature_l & 0xf0);
+    //_temperature_integral >>= 4;
+
+    _temperature_decimal = (_temperature_l & 0x0f) * 0.625;
+
+    *value = (_temperature_integral * 10) + _temperature_decimal;
     return DS18B20_IO_OK;
 }
