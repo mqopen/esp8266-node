@@ -15,24 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SENSOR_DHT22_H__
-#define __SENSOR_DHT22_H__
+#ifndef __DHT11_H__
+#define __DHT11_H__
 
-#include "dht22.h"
+#include "dht.h"
 
-#define sensor_init dht22_init
+void dht11_init(void);
 
-/**
- * Possible values are:
- *  - 'xxx.xxx'             : len = 7 (temperature, humidity)
- *  - 'E_WRITE_ADDRESS'     : len = 15
- *  - 'E_WRITE_REGISTER'    : len = 16
- *  - 'E_WRITE_VALUE'       : len = 13
- *  - 'E_READ_ADDRESS'      : len = 14
- *  - 'E_INVALID_DATA'      : len = 14
- *
- * maxium possible length: 16 Bytes
- */
-#define SENSOR_VALUE_BUFFER_SIZE    16
+enum dht_io_result dht11_read(struct dht_data *data);
 
 #endif

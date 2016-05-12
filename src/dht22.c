@@ -19,17 +19,16 @@
 #include <osapi.h>
 #include <gpio.h>
 #include <os_type.h>
+#include "dht.h"
 #include "dht22.h"
 
 #define MAXTIMINGS 10000
 #define BREAKTIME 20
 
-struct dht22_data dht22_data;
-
 void dht22_init(void) {
 }
 
-enum dht22_io_result dht22_read(void) {
+enum dht_io_result dht22_read(struct dht_data *data) {
     int counter = 0;
     int laststate = 1;
     int i = 0;
@@ -54,7 +53,7 @@ enum dht22_io_result dht22_read(void) {
     }
 
     if (i==100000) {
-      return DHT22_IO_WRITE_ADDRESS_ERROR;
+      return DHT_IO_WRITE_ADDRESS_ERROR;
     }
 
     for (i = 0; i < MAXTIMINGS; i++) {
@@ -85,13 +84,13 @@ enum dht22_io_result dht22_read(void) {
         if (data[4] == checksum) {
             /* yay! checksum is valid */
 
-            dht22_data.humidity = data[0] * 256 + data[1];
+            data->humidity = data[0] * 256 + data[1];
 
-            dht22_data.temperature = (data[2] & 0x7F)* 256 + data[3];
+            data->temperature = (data[2] & 0x7F)* 256 + data[3];
             if (data[2] & 0x80) {
-                dht22_data.temperature = -dht22_data.temperature;
+                data->temperature = -data->temperature;
             }
         }
     }
-    return DHT22_IO_OK;
+    return DHT_IO_OK;
 }

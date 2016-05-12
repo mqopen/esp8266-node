@@ -24,8 +24,8 @@
  * Sensor abstraction layer.
  */
 
-#if ENABLE_SENSOR_DHT22
-  #include "sensor_dht22.h"
+#if ENABLE_SENSOR_DHT22 || ENABLE_SENSOR_DHT11
+  #include "sensor_dht.h"
 #elif ENABLE_SENSOR_BMP180
   #include "sensor_bmp180.h"
 #elif ENABLE_SENSOR_BH1750FVI

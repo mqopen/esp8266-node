@@ -7,9 +7,13 @@ choice
 
 config SENSOR_DHT22
 	bool "DHT22"
-	select BUS_ONEWIRE
 	help
 	  Configure to use DHT22 humidity and temperature sensor.
+
+config SENSOR_DHT11
+	bool "DHT11"
+	help
+	  Configure to use DHT11 humidity and temperature sensor.
 
 config SENSOR_BMP180
 	bool "BMP180"
@@ -32,41 +36,48 @@ config SENSOR_DS18B20
 endchoice
 
 #
-# DHT22 sensor settings.
+# Common DHT22 and DHT11 settings.
 #
-config SENSOR_DHT22_TEMPERATURE
+config SENSOR_DHT_TEMPERATURE
 	bool "Temperature"
-	depends on SENSOR_DHT22
+	depends on SENSOR_DHT22 || SENSOR_DHT11
 	default y
 	help
 	  Enable sensor temperature reading.
 
-if SENSOR_DHT22_TEMPERATURE
-config SENSOR_DHT22_TEMPERATURE_TOPIC
-	string "DHT22 Temperature topic"
-	depends on SENSOR_DHT22 && SENSOR_DHT22_TEMPERATURE
+if SENSOR_DHT_TEMPERATURE
+config SENSOR_DHT_TEMPERATURE_TOPIC
+	string "DHT Temperature topic"
+	depends on (SENSOR_DHT22 || SENSOR_DHT11) && SENSOR_DHT_TEMPERATURE
 	default "temperature"
 	help
 	  Sensor temperature topic.
 
-endif # SENSOR_DHT22_TEMPERATURE
+endif # SENSOR_DHT_TEMPERATURE
 
-config SENSOR_DHT22_HUMIDITY
+config SENSOR_DHT_HUMIDITY
 	bool "Humidity"
-	depends on SENSOR_DHT22
+	depends on SENSOR_DHT22 || SENSOR_DHT11
 	default y
 	help
 	  Enable sensor humidity reading.
 
-if SENSOR_DHT22_HUMIDITY
-config SENSOR_DHT22_HUMIDITY_TOPIC
-	string "DHT22 Humidity topic"
-	depends on SENSOR_DHT22 && SENSOR_DHT22_HUMIDITY
+if SENSOR_DHT_HUMIDITY
+config SENSOR_DHT_HUMIDITY_TOPIC
+	string "DHT Humidity topic"
+	depends on (SENSOR_DHT22 || SENSOR_DHT11) && SENSOR_DHT_HUMIDITY
 	default "humidity"
 	help
 	  Sensor humidity topic.
 
-endif # SENSOR_DHT22_HUMIDITY
+endif # SENSOR_DHT_HUMIDITY
+
+config SENSOR_DHT_GPIO_DQ
+	int "DHT GPIO DQ pin number"
+	default 2
+	depends on SENSOR_DHT22 || SENSOR_DHT11
+	help
+	  Configure DHT sensor DQ pin.
 
 #
 # BMP180 sensor settings.
