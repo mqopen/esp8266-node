@@ -90,8 +90,9 @@ enum sensor_io_result sensor_read(void) {
 #if ENABLE_SENSOR_DHT_TEMPERATURE
             _len = os_sprintf(
                 _sensor_dht_data[i].data,
-                "%d.%d",
-                _data.temperature / 1000, _data.temperature % 1000);
+                _data.temperature < 0 ? "-%d.%d" : "%d.%d",
+                abs(_data.temperature) / 1000,
+                abs(_data.temperature) % 1000);
             _sensor_dht_data[i++].len = _len;
 #endif
 #if ENABLE_SENSOR_DHT_HUMIDITY
@@ -102,20 +103,20 @@ enum sensor_io_result sensor_read(void) {
             _sensor_dht_data[i++].len = _len;
 #endif
             return SENSOR_IO_OK;
-        case DHT_IO_WRITE_ADDRESS_ERROR:
-            _len = os_sprintf(_buf, "E_WRITE_ADDRESS");
+        case DHT_IO_CHECKSUM_ERROR:
+            _len = os_sprintf(_buf, "E_CHECKSUM");
             break;
-        case DHT_IO_WRITE_REGISTER_ERROR:
-            _len = os_sprintf(_buf, "E_WRITE_REGISTER");
+        case DHT_IO_TIMEOUT_ERROR:
+            _len = os_sprintf(_buf, "E_TIMEOUT");
             break;
-        case DHT_IO_WRITE_VALUE_ERROR:
-            _len = os_sprintf(_buf, "E_WRITE_VALUE");
+        case DHT_IO_CONNECT_ERROR:
+            _len = os_sprintf(_buf, "E_CONN");
             break;
-        case DHT_IO_READ_ADDRESS_ERROR:
-            _len = os_sprintf(_buf, "E_READ_ADDRESS");
+        case DHT_IO_ACK_H_ERROR:
+            _len = os_sprintf(_buf, "E_ACK_H");
             break;
-        case DHT_IO_INVALID_DATA:
-            _len = os_sprintf(_buf, "E_INVALID_DATA");
+        case DHT_IO_ACK_L_ERROR:
+            _len = os_sprintf(_buf, "E_ACK_L");
             break;
     }
     for (i = 0; i < sensor_topics_count; i++) {

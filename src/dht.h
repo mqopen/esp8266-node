@@ -21,13 +21,13 @@
 #include <c_types.h>
 
 #define DHT_GPIO_DQ CONFIG_SENSOR_DHT_GPIO_DQ
-#if CONFIG_SENSOR_DHT_GPIO_DG == 0
+#if CONFIG_SENSOR_DHT_GPIO_DQ == 0
   #define DHT_DQ_MUX PERIPHS_IO_MUX_GPIO0_U
   #define DHT_DQ_FUNC FUNC_GPIO0
-#elif CONFIG_SENSOR_DHT_GPIO_DG == 2
+#elif CONFIG_SENSOR_DHT_GPIO_DQ == 2
   #define DHT_DQ_MUX PERIPHS_IO_MUX_GPIO2_U
   #define DHT_DQ_FUNC FUNC_GPIO2
-#elif CONFIG_SENSOR_DHT_GPIO_DG == 14
+#elif CONFIG_SENSOR_DHT_GPIO_DQ == 14
   #define DHT_DQ_MUX PERIPHS_IO_MUX_MTMS_U
   #define DHT_DQ_FUNC FUNC_GPIO14
 #else
@@ -36,12 +36,12 @@
 
 
 enum dht_io_result {
-    DHT_IO_OK,                      /**< Communication is OK. */
-    DHT_IO_WRITE_ADDRESS_ERROR,     /**< Write address not acknowledged. */
-    DHT_IO_WRITE_REGISTER_ERROR,    /**< Write of destination register not acknowledged. */
-    DHT_IO_WRITE_VALUE_ERROR,       /**< Write of register value not acknowledged (Write operation only). */
-    DHT_IO_READ_ADDRESS_ERROR,      /**< Read address not acknowledged. */
-    DHT_IO_INVALID_DATA,            /**< Invalid data. */
+    DHT_IO_OK,                      /**< Communication was successful. */
+    DHT_IO_CHECKSUM_ERROR,          /**< Checksum doesn't match */
+    DHT_IO_TIMEOUT_ERROR,           /**< Communication timeouted. */
+    DHT_IO_CONNECT_ERROR,           /**< Initial response signal not received. */
+    DHT_IO_ACK_H_ERROR,             /**< Ack pull-up not received. */
+    DHT_IO_ACK_L_ERROR,             /**< Ack pull-down not received. */
 };
 
 struct dht_data {

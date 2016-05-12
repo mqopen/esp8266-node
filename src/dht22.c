@@ -35,9 +35,9 @@ enum dht_io_result dht22_read(struct dht_data *data) {
     int j = 0;
     int checksum = 0;
 
-    int data[100];
+    int _d[100];
 
-    data[0] = data[1] = data[2] = data[3] = data[4] = 0;
+    _d[0] = _d[1] = _d[2] = _d[3] = _d[4] = 0;
 
     GPIO_OUTPUT_SET(DHT22_GPIO_DQ, 1);
     os_delay_us(250000);
@@ -53,7 +53,7 @@ enum dht_io_result dht22_read(struct dht_data *data) {
     }
 
     if (i==100000) {
-      return DHT_IO_WRITE_ADDRESS_ERROR;
+      return DHT_IO_ACK_ERROR;
     }
 
     for (i = 0; i < MAXTIMINGS; i++) {
@@ -71,23 +71,23 @@ enum dht_io_result dht22_read(struct dht_data *data) {
         }
 
         if ((i>3) && (i%2 == 0)) {
-            data[j/8] <<= 1;
+            _d[j/8] <<= 1;
             if (counter > BREAKTIME) {
-                data[j/8] |= 1;
+                _d[j/8] |= 1;
             }
             j++;
         }
     }
 
     if (j >= 39) {
-        checksum = (data[0] + data[1] + data[2] + data[3]) & 0xFF;
-        if (data[4] == checksum) {
+        checksum = (_d[0] + _d[1] + _d[2] + _d[3]) & 0xFF;
+        if (_d[4] == checksum) {
             /* yay! checksum is valid */
 
-            data->humidity = data[0] * 256 + data[1];
+            data->humidity = _d[0] * 256 + _d[1];
 
-            data->temperature = (data[2] & 0x7F)* 256 + data[3];
-            if (data[2] & 0x80) {
+            data->temperature = (_d[2] & 0x7F)* 256 + _d[3];
+            if (_d[2] & 0x80) {
                 data->temperature = -data->temperature;
             }
         }

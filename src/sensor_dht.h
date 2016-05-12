@@ -25,14 +25,14 @@
 /**
  * Possible values are:
  *  - 'xxx.xxx'             : len = 7 (temperature, humidity)
- *  - 'E_WRITE_ADDRESS'     : len = 15
- *  - 'E_WRITE_REGISTER'    : len = 16
- *  - 'E_WRITE_VALUE'       : len = 13
- *  - 'E_READ_ADDRESS'      : len = 14
- *  - 'E_INVALID_DATA'      : len = 14
+ *  - 'E_CONN'              : len = 6
+ *  - 'E_ACK_H'             : len = 7
+ *  - 'E_ACK_L'             : len = 7
+ *  - 'E_TIMEOUT'           : len = 9
+ *  - 'E_CHECKSUM'          : len = 10
  *
  * maxium possible length: 16 Bytes
  */
-#define SENSOR_VALUE_BUFFER_SIZE    16
+#define SENSOR_VALUE_BUFFER_SIZE    10
 
 #endif
