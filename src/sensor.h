@@ -32,8 +32,15 @@
   #include "sensor_bh1750fvi.h"
 #elif ENABLE_SENSOR_DS18B20
   #include "sensor_ds18b20.h"
+#elif ENABLE_SENSOR_BUTTON
+  #include "sensor_button.h"
 #else
   #error Unsupported sensor.
+#endif
+
+/* Default sensor type is synchronous. */
+#ifndef SENSOR_TYPE_ASYNCHRONOUS
+  #define SENSOR_TYPE_ASYNCHRONOUS 0
 #endif
 
 enum sensor_io_result {
@@ -56,12 +63,17 @@ extern const uint8_t sensor_topics_count;
  */
 extern void sensor_init(void);
 
+#if SENSOR_TYPE_ASYNCHRONOUS
+typedef void (* sensor_notify_callback_t)(void);
+extern void sensor_register_notify_callback(sensor_notify_callback_t callback);
+#else
 /**
  * Read new data from the sensor.
  *
  * @return Result of IO operation.
  */
 extern enum sensor_io_result sensor_read(void);
+#endif
 
 /**
  * Get address of MQTT topic indentified by it's index.

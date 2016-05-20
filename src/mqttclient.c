@@ -314,6 +314,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
     char *_topic;
     char *_data;
 
+#if ! SENSOR_TYPE_ASYNCHRONOUS
+
     if (!_publish_sending) {
         _publish_sending = true;
 
@@ -326,6 +328,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
 
         _mqttclient_data_send();
     }
+#endif
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
