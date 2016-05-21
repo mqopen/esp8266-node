@@ -31,8 +31,10 @@
 /** Timer for ending MQTT Keep Alive messages. */
 static os_timer_t _keep_alive_timer;
 
+#if SENSOR_TYPE_SYNCHRONOUS
 /** Timer for sending DHT measurements. */
 static os_timer_t  _publish_timer;
+#endif
 
 /** Timer for limit reconnect attempts. */
 static os_timer_t _reconnect_timer;
@@ -88,10 +90,12 @@ static bool _publish_sending = false;
 
 /* Static function prototypes. */
 
+#if SENSOR_TYPE_SYNCHRONOUS
 /**
  * Publish MQTT data to broker.
  */
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void);
+#endif
 
 /**
  * Send CONNECT message to MQTT broker.
@@ -185,6 +189,10 @@ static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void);
 
 static void ICACHE_FLASH_ATTR _mqttclient_reset_buffers(void);
 
+#if SENSOR_TYPE_ASYNCHRONOUS
+static void _mqttclient_async_callback(void);
+#endif
+
 void ICACHE_FLASH_ATTR mqttclient_init(void) {
 
     /* Signalization LED. */
@@ -193,17 +201,31 @@ void ICACHE_FLASH_ATTR mqttclient_init(void) {
 
     /* Initiate timers. */
     os_timer_disarm(&_keep_alive_timer);
+#if SENSOR_TYPE_SYNCHRONOUS
     os_timer_disarm(&_publish_timer);
+#endif
     os_timer_disarm(&_reconnect_timer);
 
     /* Assign functions for timers. */
     os_timer_setfn(&_keep_alive_timer, (os_timer_func_t *) _mqttclient_umqtt_keep_alive, NULL);
+#if SENSOR_TYPE_SYNCHRONOUS
     os_timer_setfn(&_publish_timer, (os_timer_func_t *) _mqttclient_publish, NULL);
+#endif
     os_timer_setfn(&_reconnect_timer, (os_timer_func_t *) _mqttclient_do_reconnect, NULL);
 
     umqtt_init(&_mqtt);
     _mqttclient_reset_buffers();
+
+#if SENSOR_TYPE_ASYNCHRONOUS
+    sensor_register_notify_callback(_mqttclient_async_callback);
+#endif
 }
+
+#if SENSOR_TYPE_ASYNCHRONOUS
+static void _mqttclient_async_callback(void) {
+    os_printf("mqtt client callback\r\n");
+}
+#endif
 
 void ICACHE_FLASH_ATTR mqttclient_start(void) {
     _is_running = true;
@@ -307,14 +329,13 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
     _mqttclient_data_send();
 }
 
+#if SENSOR_TYPE_SYNCHRONOUS
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
     uint8_t _i;
     uint8_t _topic_len;
     uint8_t _data_len;
     char *_topic;
     char *_data;
-
-#if ! SENSOR_TYPE_ASYNCHRONOUS
 
     if (!_publish_sending) {
         _publish_sending = true;
@@ -328,8 +349,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
 
         _mqttclient_data_send();
     }
-#endif
 }
+#endif
 
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
     if (!_keep_alive_sending) {
@@ -341,12 +362,16 @@ static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
 
 static void ICACHE_FLASH_ATTR _mqttclient_start_mqtt_timers(void) {
     os_timer_arm(&_keep_alive_timer, CONFIG_MQTT_KEEPALIVE_REQUEST_INTERVAL * 1000, 1);
+#if SENSOR_TYPE_SYNCHRONOUS
     os_timer_arm(&_publish_timer, CONFIG_MQTT_PUBLISH_INTERVAL * 1000, 1);
+#endif
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_stop_mqtt_timers(void) {
     os_timer_disarm(&_keep_alive_timer);
+#if SENSOR_TYPE_SYNCHRONOUS
     os_timer_disarm(&_publish_timer);
+#endif
 }
 
 static uint8_t _rx_buf[200];

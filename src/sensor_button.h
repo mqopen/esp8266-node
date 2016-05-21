@@ -22,6 +22,8 @@
 
 #define sensor_init button_init
 
+#define sensor_register_notify_callback button_register_event_callback
+
 #define SENSOR_VALUE_BUFFER_SIZE    10
 
 /* Declare asynchrounous sensor type. */

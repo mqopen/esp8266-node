@@ -40,7 +40,10 @@
 
 /* Default sensor type is synchronous. */
 #ifndef SENSOR_TYPE_ASYNCHRONOUS
-  #define SENSOR_TYPE_ASYNCHRONOUS 0
+  #define SENSOR_TYPE_ASYNCHRONOUS  0
+  #define SENSOR_TYPE_SYNCHRONOUS   1
+#else
+  #define SENSOR_TYPE_SYNCHRONOUS   0
 #endif
 
 enum sensor_io_result {

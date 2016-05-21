@@ -39,8 +39,5 @@ static struct sensor_str _sensor_button_data = {
 
 const uint8_t sensor_topics_count = 1;
 
-void sensor_register_notify_callback(sensor_notify_callback_t callback) {
-}
-
 __sensor_get_topic_scalar(_sensor_button_topics)
 __sensor_get_value_scalar(_sensor_button_data)

@@ -18,11 +18,6 @@
 #ifndef __BUTTON_H__
 #define __BUTTON_H__
 
-enum button_io_result {
-    BUTTON_IO_OK,
-    BUTTON_IO_ERROR,
-};
-
 void button_init(void);
 
 void button_register_event_callback(void (*callback)(void));
