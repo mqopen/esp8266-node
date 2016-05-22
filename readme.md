@@ -6,8 +6,10 @@ Various sensors are supported:
 
  - [BMP180](https://www.bosch-sensortec.com/bst/products/all_products/bmp180) Barometric pressure sensor.
  - [DHT22](http://www.aosong.com/en/products/details.asp?id=117) Humidity and temperature sensor.
+ - DHT11
  - [BH1750FVI](http://www.rohm.com/web/global/products/-/product/BH1750FVI) Ambient light sensor.
  - [DS18B20](https://www.maximintegrated.com/en/products/analog/sensors-and-sensor-interface/DS18B20.html) Temperature sensor.
+ - Button
 
 ## Dependencies
 
