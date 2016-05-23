@@ -18,8 +18,16 @@
 #ifndef __BUTTON_H__
 #define __BUTTON_H__
 
-void button_init(void);
+enum button_event_id {
+    BUTTON_ID_1,
+    BUTTON_ID_2,
+};
 
-void button_register_event_callback(void (*callback)(void));
+enum button_event_state {
+    BUTTON_STATE_HIGH,
+    BUTTON_STATE_LOW,
+};
+
+void button_init(void);
 
 #endif

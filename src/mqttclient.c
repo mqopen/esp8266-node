@@ -190,7 +190,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void);
 static void ICACHE_FLASH_ATTR _mqttclient_reset_buffers(void);
 
 #if SENSOR_TYPE_ASYNCHRONOUS
-static void _mqttclient_async_callback(void);
+static void _mqttclient_async_callback(uint8_t topic_index);
 #endif
 
 void ICACHE_FLASH_ATTR mqttclient_init(void) {
@@ -222,8 +222,25 @@ void ICACHE_FLASH_ATTR mqttclient_init(void) {
 }
 
 #if SENSOR_TYPE_ASYNCHRONOUS
-static void _mqttclient_async_callback(void) {
+static void _mqttclient_async_callback(uint8_t topic_index) {
     os_printf("mqtt client callback\r\n");
+
+
+
+    uint8_t _topic_len;
+    uint8_t _data_len;
+    char *_topic;
+    char *_data;
+
+    if (!_publish_sending) {
+        _publish_sending = true;
+
+        _topic = sensor_get_topic(topic_index, &_topic_len);
+        _data = sensor_get_value(topic_index, &_data_len);
+        umqtt_publish(&_mqtt, _topic, (uint8_t *) _data, _data_len, 0);
+
+        _mqttclient_data_send();
+    }
 }
 #endif
 

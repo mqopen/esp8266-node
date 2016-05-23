@@ -20,9 +20,10 @@
 #include <eagle_soc.h>
 #include <gpio.h>
 #include <ets_sys.h>
+#include "sensor.h"
+#include "sensor_button.h"
 #include "button.h"
 
-static void (*_button_event_callback)(void) = NULL;
 static void _button_interrupt_handler(uint32_t intr_mask, void *arg);
 
 void button_init(void) {
@@ -33,9 +34,6 @@ void button_init(void) {
     ETS_GPIO_INTR_ENABLE();
 }
 
-void button_register_event_callback(void (*callback)(void)) {
-    _button_event_callback = callback;
-}
 
 static void _button_interrupt_handler(uint32_t intr_mask, void *arg) {
     os_printf("interrupt 0x%08x\r\n", intr_mask);
@@ -46,9 +44,7 @@ static void _button_interrupt_handler(uint32_t intr_mask, void *arg) {
     gpio_status = GPIO_REG_READ(GPIO_STATUS_ADDRESS);
     os_printf("status 0x%08x\r\n", gpio_status);
 
-    if (_button_event_callback != NULL) {
-        _button_event_callback();
-    }
+    sensor_button_notify(BUTTON_ID_1, BUTTON_STATE_HIGH);
 
     //clear interrupt status
     GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, gpio_status);

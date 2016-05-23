@@ -15,20 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __COMMON_H__
-#define __COMMON_H__
+#ifndef __SENSOR_TYPES_H__
+#define __SENSOR_TYPES_H__
 
-#define _BV(b)      (1<<(b))
-#define abs(x)      ((x)<0?(-x):(x))
-#define max(x, y)   ((x)<(y)?(y):(x))
-
-#define _STR(x) #x
-#define STR(x) _STR(x)
-
-#define TOPIC(t)            CONFIG_GENERAL_DEVICE_LOCATION "/" t
-#define TOPIC_PRESENCE(t)   "presence/" t
-
-/** Get length of string. */
-#define __sizeof_str(s)     (sizeof(s) - 1)
+typedef void (* sensor_notify_callback_t)(uint8_t topic_index);
 
 #endif

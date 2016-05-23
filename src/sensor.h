@@ -41,9 +41,12 @@
 /* Default sensor type is synchronous. */
 #ifndef SENSOR_TYPE_ASYNCHRONOUS
   #define SENSOR_TYPE_ASYNCHRONOUS  0
-  #define SENSOR_TYPE_SYNCHRONOUS   1
-#else
+#endif
+
+#if SENSOR_TYPE_ASYNCHRONOUS
   #define SENSOR_TYPE_SYNCHRONOUS   0
+#else
+  #define SENSOR_TYPE_SYNCHRONOUS   1
 #endif
 
 enum sensor_io_result {
@@ -66,16 +69,15 @@ extern const uint8_t sensor_topics_count;
  */
 extern void sensor_init(void);
 
-#if SENSOR_TYPE_ASYNCHRONOUS
-typedef void (* sensor_notify_callback_t)(void);
-extern void sensor_register_notify_callback(sensor_notify_callback_t callback);
-#else
+#if SENSOR_TYPE_SYNCHRONOUS
 /**
  * Read new data from the sensor.
  *
  * @return Result of IO operation.
  */
 extern enum sensor_io_result sensor_read(void);
+#else
+extern void sensor_register_notify_callback(sensor_notify_callback_t callback);
 #endif
 
 /**

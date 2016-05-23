@@ -18,15 +18,18 @@
 #ifndef __SENSOR_BUTTON_H__
 #define __SENSOR_BUTTON_H__
 
+/* Declare asynchrounous sensor type. */
+#define SENSOR_TYPE_ASYNCHRONOUS    1
+
+#include "sensor_types.h"
 #include "button.h"
 
 #define sensor_init button_init
 
-#define sensor_register_notify_callback button_register_event_callback
-
 #define SENSOR_VALUE_BUFFER_SIZE    10
 
-/* Declare asynchrounous sensor type. */
-#define SENSOR_TYPE_ASYNCHRONOUS    1
+void sensor_button_notify(enum button_event_id id, enum button_event_state state);
+
+void sensor_register_notify_callback(sensor_notify_callback_t callback);
 
 #endif
