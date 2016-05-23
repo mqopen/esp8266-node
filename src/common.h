@@ -27,4 +27,6 @@
 #define TOPIC(t)            CONFIG_GENERAL_DEVICE_LOCATION "/" t
 #define TOPIC_PRESENCE(t)   "presence/" t
 
+#define __sizeof_str(s)     (sizeof(s) - 1)
+
 #endif

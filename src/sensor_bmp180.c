@@ -55,13 +55,13 @@ static struct sensor_str _sensor_bmp180_topics[] = {
 #if ENABLE_SENSOR_BMP180_TEMPERATURE
     {
         .data = TOPIC(CONFIG_SENSOR_BMP180_TEMPERATURE_TOPIC),
-        .len = sizeof(TOPIC(CONFIG_SENSOR_BMP180_TEMPERATURE_TOPIC)),
+        .len = __sizeof_str(TOPIC(CONFIG_SENSOR_BMP180_TEMPERATURE_TOPIC)),
     },
 #endif
 #if CONFIG_SENSOR_BMP180_PRESSURE
     {
         .data = TOPIC(CONFIG_SENSOR_BMP180_PRESSURE_TOPIC),
-        .len = sizeof(TOPIC(CONFIG_SENSOR_BMP180_PRESSURE_TOPIC)),
+        .len = __sizeof_str(TOPIC(CONFIG_SENSOR_BMP180_PRESSURE_TOPIC)),
     },
 #endif
 };

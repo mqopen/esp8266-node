@@ -48,13 +48,13 @@ static struct sensor_str _sensor_dht_topics[] = {
 #if ENABLE_SENSOR_DHT_TEMPERATURE
     {
         .data = TOPIC(CONFIG_SENSOR_DHT_TEMPERATURE_TOPIC),
-        .len = sizeof(TOPIC(CONFIG_SENSOR_DHT_TEMPERATURE_TOPIC)),
+        .len = __sizeof_str(TOPIC(CONFIG_SENSOR_DHT_TEMPERATURE_TOPIC)),
     },
 #endif
 #if ENABLE_SENSOR_DHT_HUMIDITY
     {
         .data = TOPIC(CONFIG_SENSOR_DHT_HUMIDITY_TOPIC),
-        .len = sizeof(TOPIC(CONFIG_SENSOR_DHT_HUMIDITY_TOPIC)),
+        .len = __sizeof_str(TOPIC(CONFIG_SENSOR_DHT_HUMIDITY_TOPIC)),
     },
 #endif
 };

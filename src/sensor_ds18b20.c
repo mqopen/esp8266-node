@@ -28,7 +28,7 @@ static char _sensor_ds18b20_data_temperature_str[SENSOR_VALUE_BUFFER_SIZE];
 
 static struct sensor_str _sensor_ds18b20_topics = {
     .data = TOPIC(CONFIG_SENSOR_DS18B20_TEMPERATURE_TOPIC),
-    .len = sizeof(TOPIC(CONFIG_SENSOR_DS18B20_TEMPERATURE_TOPIC)),
+    .len = __sizeof_str(TOPIC(CONFIG_SENSOR_DS18B20_TEMPERATURE_TOPIC)),
 };
 
 static struct sensor_str _sensor_ds18b20_data = {

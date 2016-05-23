@@ -26,7 +26,7 @@
  */
 static struct sensor_str _sensor_button_topics = {
     .data = TOPIC("button"),
-    .len = sizeof("button"),
+    .len = __sizeof_str("button"),
 };
 
 /**
@@ -34,7 +34,7 @@ static struct sensor_str _sensor_button_topics = {
  */
 static struct sensor_str _sensor_button_data = {
     .data = "test",
-    .len = sizeof("test"),
+    .len = __sizeof_str("test"),
 };
 
 const uint8_t sensor_topics_count = 1;
