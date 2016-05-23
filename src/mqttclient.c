@@ -232,7 +232,7 @@ static void _mqttclient_async_callback(uint8_t topic_index) {
     char *_topic;
     char *_data;
 
-    if (!_publish_sending) {
+    if (!_publish_sending && _mqtt.state == UMQTT_STATE_CONNECTED) {
         _publish_sending = true;
 
         _topic = sensor_get_topic(topic_index, &_topic_len);

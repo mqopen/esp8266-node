@@ -28,7 +28,7 @@
 
 #define SENSOR_VALUE_BUFFER_SIZE    10
 
-void sensor_button_notify(enum button_event_id id, enum button_event_state state);
+void sensor_button_notify(enum button_event_id id, uint8_t state);
 
 void sensor_register_notify_callback(sensor_notify_callback_t callback);
 

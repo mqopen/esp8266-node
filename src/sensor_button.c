@@ -73,7 +73,7 @@ static struct sensor_str _sensor_button_data[] = {
     .len = __sizeof_str(CONFIG_SENSOR_BUTTON_1_EVENTS_HIGH_MESSAGE),
   #elif ENABLE_SENSOR_BUTTON_1_EVENTS_CHANGE
     .data = _sensor_button_1_data_str,
-    .len = sizeof(_sensor_button_1_data_str),
+    .len = 0,
   #else
     #error Unsupported button 1 events config!
   #endif
@@ -89,7 +89,7 @@ static struct sensor_str _sensor_button_data[] = {
     .len = __sizeof_str(CONFIG_SENSOR_BUTTON_2_EVENTS_HIGH_MESSAGE),
   #elif ENABLE_SENSOR_BUTTON_2_EVENTS_CHANGE
     .data = _sensor_button_2_data_str,
-    .len = sizeof(_sensor_button_2_data_str),
+    .len = 0,
   #else
     #error Unsupported button 2 events config!
   #endif
@@ -98,16 +98,81 @@ static struct sensor_str _sensor_button_data[] = {
 };
 
 static sensor_notify_callback_t _sensor_notify_callback = NULL;
+static enum button_event_id _sensor_button_index[] = {
+#if ENABLE_SENSOR_BUTTON_1
+    BUTTON_ID_1,
+#endif
+#if ENABLE_SENSOR_BUTTON_2
+    BUTTON_ID_2,
+#endif
+};
 
-const uint8_t sensor_topics_count = 2;
+const uint8_t sensor_topics_count = sizeof(_sensor_button_topics) / sizeof(_sensor_button_topics[0]);
 
 void sensor_register_notify_callback(sensor_notify_callback_t callback) {
     _sensor_notify_callback = callback;
 }
 
-void sensor_button_notify(enum button_event_id id, enum button_event_state state) {
+void sensor_button_notify(enum button_event_id id, uint8_t state) {
+    uint8_t i = 0;
+    uint8_t _len = 0;
+
+#if ENABLE_SENSOR_BUTTON_1 && ENABLE_SENSOR_BUTTON_2
+    /* Get data and topic index. */
+    for (i = 0; i < (sizeof(_sensor_button_index) / sizeof(_sensor_button_index[0])); i++) {
+        if (_sensor_button_index[i] == id) break;
+    }
+#endif
+
+    switch (id) {
+#if ENABLE_SENSOR_BUTTON_1
+        case BUTTON_ID_1:
+  #if ENABLE_SENSOR_BUTTON_1_EVENTS_CHANGE
+            if (state) {
+                os_memcpy(
+                    _sensor_button_data[i].data,
+                    CONFIG_SENSOR_BUTTON_1_EVENTS_HIGH_MESSAGE,
+                    __sizeof_str(CONFIG_SENSOR_BUTTON_1_EVENTS_HIGH_MESSAGE));
+                _len = __sizeof_str(CONFIG_SENSOR_BUTTON_1_EVENTS_HIGH_MESSAGE);
+            } else {
+                os_memcpy(
+                    _sensor_button_data[i].data,
+                    CONFIG_SENSOR_BUTTON_1_EVENTS_LOW_MESSAGE,
+                    __sizeof_str(CONFIG_SENSOR_BUTTON_1_EVENTS_LOW_MESSAGE));
+                _len = __sizeof_str(CONFIG_SENSOR_BUTTON_1_EVENTS_LOW_MESSAGE);
+            }
+            _sensor_button_data[i].len = _len;
+  #endif
+            break;
+#endif
+#if ENABLE_SENSOR_BUTTON_2
+        case BUTTON_ID_2:
+  #if ENABLE_SENSOR_BUTTON_2_EVENTS_CHANGE
+            if (state) {
+                os_memcpy(
+                    _sensor_button_data[i].data,
+                    CONFIG_SENSOR_BUTTON_2_EVENTS_HIGH_MESSAGE,
+                    __sizeof_str(CONFIG_SENSOR_BUTTON_2_EVENTS_HIGH_MESSAGE));
+                _len = __sizeof_str(CONFIG_SENSOR_BUTTON_2_EVENTS_HIGH_MESSAGE);
+            } else {
+                os_memcpy(
+                    _sensor_button_data[i].data,
+                    CONFIG_SENSOR_BUTTON_2_EVENTS_LOW_MESSAGE,
+                    __sizeof_str(CONFIG_SENSOR_BUTTON_2_EVENTS_LOW_MESSAGE));
+                _len = __sizeof_str(CONFIG_SENSOR_BUTTON_2_EVENTS_LOW_MESSAGE);
+            }
+            _sensor_button_data[i].len = _len;
+  #endif
+            break;
+#endif
+        default:
+            /* unknown button event. Do nothing. */
+            return;
+    }
+
+
     if (_sensor_notify_callback != NULL) {
-        _sensor_notify_callback(0);
+        _sensor_notify_callback(i);
     }
 }
 

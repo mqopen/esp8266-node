@@ -85,7 +85,7 @@ static struct sensor_str _sensor_bmp180_data[] = {
 };
 
 
-const uint8_t sensor_topics_count = sizeof(_sensor_bmp180_topics) / sizeof(_sensor_bmp180_topics[0]);;
+const uint8_t sensor_topics_count = sizeof(_sensor_bmp180_topics) / sizeof(_sensor_bmp180_topics[0]);
 
 enum sensor_io_result sensor_read(void) {
     uint8_t i = 0;

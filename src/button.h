@@ -19,13 +19,12 @@
 #define __BUTTON_H__
 
 enum button_event_id {
+#if ENABLE_SENSOR_BUTTON_1
     BUTTON_ID_1,
+#endif
+#if ENABLE_SENSOR_BUTTON_2
     BUTTON_ID_2,
-};
-
-enum button_event_state {
-    BUTTON_STATE_HIGH,
-    BUTTON_STATE_LOW,
+#endif
 };
 
 void button_init(void);
