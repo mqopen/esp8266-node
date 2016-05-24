@@ -223,10 +223,6 @@ void ICACHE_FLASH_ATTR mqttclient_init(void) {
 
 #if SENSOR_TYPE_ASYNCHRONOUS
 static void _mqttclient_async_callback(uint8_t topic_index) {
-    os_printf("mqtt client callback\r\n");
-
-
-
     uint8_t _topic_len;
     uint8_t _data_len;
     char *_topic;

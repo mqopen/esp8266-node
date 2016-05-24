@@ -20,10 +20,28 @@
 #include <eagle_soc.h>
 #include <gpio.h>
 #include <ets_sys.h>
+#include <user_interface.h>
 #include "common.h"
 #include "sensor.h"
 #include "sensor_button.h"
 #include "button.h"
+
+enum _button_event {
+    _BUTTON_HIGH,
+    _BUTTON_LOW,
+    _BUTTON_CHANGE,
+};
+
+/**
+ * Internal data about button pin.
+ */
+struct _button_pin {
+    const uint8_t pin;          /**< GPIO pin number. */
+    enum button_event_id id;    /**< Assigned button ID. */
+    uint8_t last_state;         /**< Last pin state. */
+    uint8_t debounce_counter;   /**< Debounce counter value. */
+    enum _button_event event;   /**< Button event configuration. */
+};
 
 #if ENABLE_SENSOR_BUTTON_1
   #define BUTTON_1_GPIO_PIN CONFIG_SENSOR_BUTTON_1_GPIO_PIN
@@ -38,11 +56,11 @@
   #endif
 
   #if ENABLE_SENSOR_BUTTON_1_EVENTS_CHANGE
-    #define BUTTON_1_EVENT GPIO_PIN_INTR_ANYEDGE
+    #define BUTTON_1_EVENT _BUTTON_CHANGE
   #elif ENABLE_SENSOR_BUTTON_1_EVENTS_LOW
-    #define BUTTON_1_EVENT GPIO_PIN_INTR_NEGEDGE
+    #define BUTTON_1_EVENT _BUTTON_LOW
   #elif ENABLE_SENSOR_BUTTON_1_EVENTS_HIGH
-    #define BUTTON_1_EVENT GPIO_PIN_INTR_POSEDGE
+    #define BUTTON_1_EVENT _BUTTON_HIGH
   #else
     #error Unsupported button 1 event!
   #endif
@@ -61,73 +79,173 @@
   #endif
 
   #if ENABLE_SENSOR_BUTTON_2_EVENTS_CHANGE
-    #define BUTTON_2_EVENT GPIO_PIN_INTR_ANYEDGE
+    #define BUTTON_2_EVENT _BUTTON_CHANGE
   #elif ENABLE_SENSOR_BUTTON_2_EVENTS_LOW
-    #define BUTTON_2_EVENT GPIO_PIN_INTR_NEGEDGE
+    #define BUTTON_2_EVENT _BUTTON_LOW
   #elif ENABLE_SENSOR_BUTTON_2_EVENTS_HIGH
-    #define BUTTON_2_EVENT GPIO_PIN_INTR_POSEDGE
+    #define BUTTON_2_EVENT _BUTTON_HIGH
   #else
     #error Unsupported button 2 event!
   #endif
 #endif
 
-struct _button_pin {
-    const uint8_t pin;
-    enum button_event_id id;
-};
-
-static void _button_interrupt_handler(uint32_t intr_mask, void *arg);
-
+/** Array of enabled button pins.  */
 static struct _button_pin _button_enabled_pins[] = {
 #if ENABLE_SENSOR_BUTTON_1
     {
         .pin = BUTTON_1_GPIO_PIN,
         .id = BUTTON_ID_1,
+        .event = BUTTON_1_EVENT,
     },
 #endif
 #if ENABLE_SENSOR_BUTTON_2
     {
         .pin = BUTTON_2_GPIO_PIN,
         .id = BUTTON_ID_2,
+        .event = BUTTON_2_EVENT,
     },
 #endif
 };
 
+/** Helper marco to get enable button pins count. */
 #define _button_pins_count (sizeof(_button_enabled_pins) / sizeof(_button_enabled_pins[0]))
 
+#define _button_debounce_check_count 4
+
+/** Check period every 10 ms */
+#define _button_debounce_check_period 10
+
+/** Button debounce timer structure. */
+static os_timer_t _button_debounce_timer;
+
+static uint32_t _button_gpio_status = 0;
+
+/**
+ * Button event interrupt handler.
+ *
+ * @param intr_mask Internal interrupt mask.
+ * @param arg User defined argument. Not used.
+ */
+static void _button_interrupt_handler(uint32_t intr_mask, void *arg);
+
+/**
+ * Initialize button state.
+ */
+static inline void _button_init_state(void);
+
+/**
+ * Debouncing timer callback.
+ */
+static void _button_debounce_callback(void);
+
+/**
+ * Trigger an even, if configured.
+ */
+static void _button_process_event(uint8_t index, uint8_t state);
+
 void button_init(void) {
+    os_timer_disarm(&_button_debounce_timer);
+    os_timer_setfn(&_button_debounce_timer, (os_timer_func_t *) _button_debounce_callback, NULL);
+
     gpio_init();
 
 #if ENABLE_SENSOR_BUTTON_1
     PIN_FUNC_SELECT(BUTTON_1_MUX, BUTTON_1_FUNC);
-    gpio_pin_intr_state_set(GPIO_ID_PIN(BUTTON_1_GPIO_PIN), BUTTON_1_EVENT);
+    gpio_pin_intr_state_set(GPIO_ID_PIN(BUTTON_1_GPIO_PIN), GPIO_PIN_INTR_ANYEDGE);
 #endif
 
 #if ENABLE_SENSOR_BUTTON_2
     PIN_FUNC_SELECT(BUTTON_2_MUX, BUTTON_2_FUNC);
-    gpio_pin_intr_state_set(GPIO_ID_PIN(BUTTON_2_GPIO_PIN), BUTTON_2_EVENT);
+    gpio_pin_intr_state_set(GPIO_ID_PIN(BUTTON_2_GPIO_PIN), GPIO_PIN_INTR_ANYEDGE);
 #endif
+
+    _button_init_state();
 
     ETS_GPIO_INTR_ATTACH(_button_interrupt_handler, NULL);
     ETS_GPIO_INTR_ENABLE();
 }
 
+static inline void _button_init_state(void) {
+    uint8_t i;
+    for (i = 0; i < _button_pins_count; i++) {
+        _button_enabled_pins[i].last_state = GPIO_INPUT_GET(GPIO_ID_PIN(_button_enabled_pins[i].pin));
+        _button_enabled_pins[i].debounce_counter = 0;
+    }
+}
 
 static void _button_interrupt_handler(uint32_t intr_mask, void *arg) {
-    uint8_t i;
-    uint32_t gpio_status;
-    gpio_status = GPIO_REG_READ(GPIO_STATUS_ADDRESS);
-    for (i = 0; i < _button_pins_count; i++) {
-        if (gpio_status & _BV(_button_enabled_pins[i].pin)) {
-            sensor_button_notify(
-                _button_enabled_pins[i].id,
-                GPIO_INPUT_GET(GPIO_ID_PIN(_button_enabled_pins[i].pin)));
-        }
-    }
+    uint32_t _gpio_status;
+    _gpio_status = GPIO_REG_READ(GPIO_STATUS_ADDRESS);
+    _button_gpio_status |= _gpio_status;
 
-    /* Debouncing delay. */
-    os_delay_us(60000);
+    /* Disable GPIO interrupts and wait for debouncing callback to enable it. */
+    ETS_GPIO_INTR_DISABLE();
+
+    os_timer_arm(&_button_debounce_timer, _button_debounce_check_period, 0);
 
     /* Clear interrupt status. */
-    GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, gpio_status);
+    GPIO_REG_WRITE(GPIO_STATUS_W1TC_ADDRESS, _gpio_status);
+}
+
+static void _button_debounce_callback(void) {
+    uint8_t i;
+    uint8_t _pin_state;
+    for (i = 0; i < _button_pins_count; i++) {
+
+        /* Check is pin has pending unresolved event. */
+        if (_button_gpio_status & _BV(_button_enabled_pins[i].pin)) {
+
+            /* Get current pin state. */
+            _pin_state = GPIO_INPUT_GET(GPIO_ID_PIN(_button_enabled_pins[i].pin));
+
+            /* Check if current pin state is same as last pin state. */
+            if (_pin_state != _button_enabled_pins[i].last_state) {
+
+                /* Pin state changed. Increment deboucing counter. */
+                _button_enabled_pins[i].debounce_counter++;
+
+                /* Check if deboucing completes. */
+                if (_button_enabled_pins[i].debounce_counter == _button_debounce_check_count) {
+
+                    /* Debouncing is complete. Generate an event. */
+                    _button_process_event(i, _pin_state);
+
+                    /*  Reset tracking variables */
+                    _button_gpio_status &= ~(_BV(_button_enabled_pins[i].pin));
+                    _button_enabled_pins[i].last_state = _pin_state;
+                    _button_enabled_pins[i].debounce_counter = 0;
+                } else {
+
+                    /* Debouncing is not complete. Shedule next check. */
+                    os_timer_arm(&_button_debounce_timer, _button_debounce_check_period, 0);
+                }
+            } else {
+
+                /* Pin has same state as previous debouced one. Reset counter and try again. */
+                _button_enabled_pins[i].debounce_counter = 0;
+                os_timer_arm(&_button_debounce_timer, _button_debounce_check_period, 0);
+            }
+        }
+    }
+    ETS_GPIO_INTR_ENABLE();
+}
+
+static void _button_process_event(uint8_t index, uint8_t state) {
+    switch (_button_enabled_pins[index].event) {
+        case _BUTTON_HIGH:
+            if (!state) {
+                return;
+            } else {
+                break;
+            }
+        case _BUTTON_LOW:
+            if (state) {
+                return;
+            } else {
+                break;
+            }
+        case _BUTTON_CHANGE:
+            break;
+    }
+    sensor_button_notify(_button_enabled_pins[index].id, state);
 }
