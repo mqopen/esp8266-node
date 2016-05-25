@@ -53,7 +53,7 @@ enum dht_io_result dht22_read(struct dht_data *data) {
     }
 
     if (i==100000) {
-      return DHT_IO_ACK_ERROR;
+      return DHT_IO_OK;
     }
 
     for (i = 0; i < MAXTIMINGS; i++) {

@@ -51,8 +51,11 @@ struct _button_pin {
   #elif CONFIG_SENSOR_BUTTON_1_GPIO_PIN == 2
     #define BUTTON_1_MUX PERIPHS_IO_MUX_GPIO2_U
     #define BUTTON_1_FUNC FUNC_GPIO2
+  #elif CONFIG_SENSOR_BUTTON_1_GPIO_PIN == 14
+    #define BUTTON_1_MUX PERIPHS_IO_MUX_MTMS_U
+    #define BUTTON_1_FUNC FUNC_GPIO14
   #else
-    #error Unsupported button GPIO pin number!
+    #error Unsupported button 1 GPIO pin number!
   #endif
 
   #if ENABLE_SENSOR_BUTTON_1_EVENTS_CHANGE
@@ -74,8 +77,11 @@ struct _button_pin {
   #elif CONFIG_SENSOR_BUTTON_2_GPIO_PIN == 2
     #define BUTTON_2_MUX PERIPHS_IO_MUX_GPIO2_U
     #define BUTTON_2_FUNC FUNC_GPIO2
+  #elif CONFIG_SENSOR_BUTTON_2_GPIO_PIN == 14
+    #define BUTTON_2_MUX PERIPHS_IO_MUX_MTMS_U
+    #define BUTTON_2_FUNC FUNC_GPIO14
   #else
-    #error Unsupported button GPIO pin number!
+    #error Unsupported button 2 GPIO pin number!
   #endif
 
   #if ENABLE_SENSOR_BUTTON_2_EVENTS_CHANGE
