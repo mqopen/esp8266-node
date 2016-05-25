@@ -17,6 +17,7 @@
 
 #include <c_types.h>
 #include <osapi.h>
+#include "common.h"
 #include "sensor.h"
 #include "bh1750fvi.h"
 #include "sensor_bh1750fvi.h"
