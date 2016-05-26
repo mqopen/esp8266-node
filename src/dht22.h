@@ -18,13 +18,7 @@
 #ifndef __DHT22_H__
 #define __DHT22_H__
 
-#include <c_types.h>
 #include "dht.h"
-
-/** GPIO DG pin. */
-#define DHT22_GPIO_DQ   14
-
-void dht22_init(void);
 
 enum dht_io_result dht22_read(struct dht_data *data);
 

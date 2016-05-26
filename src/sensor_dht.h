@@ -28,11 +28,12 @@
  *  - 'E_CONN'              : len = 6
  *  - 'E_ACK_H'             : len = 7
  *  - 'E_ACK_L'             : len = 7
- *  - 'E_TIMEOUT'           : len = 9
+ *  - 'E_TIMEOUT_L'         : len = 11
+ *  - 'E_TIMEOUT_H'         : len = 11
  *  - 'E_CHECKSUM'          : len = 10
  *
  * maxium possible length: 16 Bytes
  */
-#define SENSOR_VALUE_BUFFER_SIZE    10
+#define SENSOR_VALUE_BUFFER_SIZE    11
 
 #endif

@@ -20,8 +20,6 @@
 
 #include "dht.h"
 
-void dht11_init(void);
-
 enum dht_io_result dht11_read(struct dht_data *data);
 
 #endif

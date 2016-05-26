@@ -27,7 +27,7 @@
 #elif CONFIG_SENSOR_DHT_GPIO_DQ == 2
   #define DHT_DQ_MUX PERIPHS_IO_MUX_GPIO2_U
   #define DHT_DQ_FUNC FUNC_GPIO2
-#elif CONFIG_BUS_ONEWIRE_GPIO_DQ == 13
+#elif CONFIG_SENSOR_DHT_GPIO_DQ == 13
   #define DHT_DQ_MUX PERIPHS_IO_MUX_MTCK_U
   #define DHT_DQ_FUNC FUNC_GPIO13
 #elif CONFIG_SENSOR_DHT_GPIO_DQ == 14
@@ -37,10 +37,14 @@
   #error Unsupported DHT DQ pin number!
 #endif
 
+/** Number of bytes to read. */
+#define DHT_DATA_BYTE_LEN   5
+
 enum dht_io_result {
     DHT_IO_OK,                      /**< Communication was successful. */
     DHT_IO_CHECKSUM_ERROR,          /**< Checksum doesn't match */
-    DHT_IO_TIMEOUT_ERROR,           /**< Communication timeouted. */
+    DHT_IO_TIMEOUT_L_ERROR,         /**< Communication timeouted on low voltage phase. */
+    DHT_IO_TIMEOUT_H_ERROR,         /**< Communication timeouted on high voltage phase. */
     DHT_IO_CONNECT_ERROR,           /**< Initial response signal not received. */
     DHT_IO_ACK_H_ERROR,             /**< Ack pull-up not received. */
     DHT_IO_ACK_L_ERROR,             /**< Ack pull-down not received. */
@@ -53,14 +57,25 @@ struct dht_data {
 
 #if ENABLE_SENSOR_DHT22
   #include "dht22.h"
-  #define dht_init dht22_init
   #define dht_read dht22_read
 #elif ENABLE_SENSOR_DHT11
   #include "dht11.h"
-  #define dht_init dht11_init
   #define dht_read dht11_read
 #else
   #error Unsupported DHT variant.
 #endif
+
+/**
+ * Initialize DHT sensor.
+ */
+void dht_init(void);
+
+/**
+ * Read data from DHT sensor.
+ *
+ * @param buf Pointer to data buffer. It must be 5 bytes long.
+ * @return Result of read operation.
+ */
+enum dht_io_result dht_read_data(uint8_t *buf);
 
 #endif

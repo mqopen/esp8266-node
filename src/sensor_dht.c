@@ -106,8 +106,11 @@ enum sensor_io_result sensor_read(void) {
         case DHT_IO_CHECKSUM_ERROR:
             _len = os_sprintf(_buf, "E_CHECKSUM");
             break;
-        case DHT_IO_TIMEOUT_ERROR:
-            _len = os_sprintf(_buf, "E_TIMEOUT");
+        case DHT_IO_TIMEOUT_L_ERROR:
+            _len = os_sprintf(_buf, "E_TIMEOUT_L");
+            break;
+        case DHT_IO_TIMEOUT_H_ERROR:
+            _len = os_sprintf(_buf, "E_TIMEOUT_H");
             break;
         case DHT_IO_CONNECT_ERROR:
             _len = os_sprintf(_buf, "E_CONN");
