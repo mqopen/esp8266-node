@@ -16,18 +16,27 @@
  */
 
 #include <c_types.h>
+#include <osapi.h>
 #include "dht.h"
 #include "dht22.h"
 
 enum dht_io_result dht22_read(struct dht_data *data) {
     uint8_t buf[DHT_DATA_BYTE_LEN];
+    uint16_t _humidity;
+    int16_t _temperature;
     enum dht_io_result _io_result = dht_read_data(buf);
     if (_io_result == DHT_IO_OK) {
-        data->humidity = ((buf[0] << 8) + buf[1]) * 100;
-        data->temperature = (((buf[2] & 0x7F) << 8) + buf[3]) * 100;
+        _humidity = (buf[0] << 8) | buf[1];
+        _temperature = ((buf[2] & 0x7F) << 8) | buf[3];
+
+        data->humidity = _humidity;
+        data->humidity *= 100;
+
+        data->temperature = _temperature;
         if (buf[2] & 0x80) {
             data->temperature = -data->temperature;
         }
+        data->temperature *= 100;
     }
     return _io_result;
 }

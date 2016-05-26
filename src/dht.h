@@ -40,6 +40,8 @@
 /** Number of bytes to read. */
 #define DHT_DATA_BYTE_LEN   5
 
+#define DHT_INIT_PULLUP_DELAY 40
+
 enum dht_io_result {
     DHT_IO_OK,                      /**< Communication was successful. */
     DHT_IO_CHECKSUM_ERROR,          /**< Checksum doesn't match */
@@ -51,8 +53,8 @@ enum dht_io_result {
 };
 
 struct dht_data {
-    uint16_t humidity;
-    int16_t temperature;
+    uint32_t humidity;
+    int32_t temperature;
 };
 
 #if ENABLE_SENSOR_DHT22

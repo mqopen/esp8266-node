@@ -20,6 +20,8 @@
 
 #include "dht.h"
 
+#define DHT_INIT_PULLDOWN_DELAY  20000
+
 enum dht_io_result dht11_read(struct dht_data *data);
 
 #endif

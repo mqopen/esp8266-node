@@ -23,6 +23,7 @@
 #include "dht.h"
 
 /* Static function protypes. */
+static inline enum dht_io_result _dht_read_data(uint8_t *buf);
 static inline void _dht_dq_output(void);
 static inline void _dht_dq_input(void);
 static inline void _dht_dq_high(void);
@@ -42,54 +43,58 @@ void dht_init(void) {
     _dht_reset_dq();
 }
 
+
 enum dht_io_result dht_read_data(uint8_t *buf) {
+    enum dht_io_result _io_result = _dht_read_data(buf);
+    _dht_reset_dq();
+    return _io_result;
+}
+
+static inline enum dht_io_result _dht_read_data(uint8_t *buf) {
     uint16_t _timeout;
     uint8_t _result;
+    uint8_t _sum;
     uint8_t i;
     uint8_t j;
 
 
     _dht_dq_low();
-    os_delay_us(20000);
+    os_delay_us(DHT_INIT_PULLDOWN_DELAY);
 
     _dht_dq_high();
-    os_delay_us(40);
+    os_delay_us(DHT_INIT_PULLUP_DELAY);
 
     _dht_dq_input();
 
     /* Wait for pull-down response signal. */
-    _timeout = 8;
+    _timeout = 9;
     while (_dht_dq_read()) {
         os_delay_us(10);
-        _timeout--;
-        if (!_timeout) {
-            _dht_reset_dq();
+        if (!_timeout--) {
             return DHT_IO_CONNECT_ERROR;
         }
     }
 
     /* Wait rest of the period of pull-down response signal. */
-    os_delay_us(_timeout * 10);
+    if (_timeout)
+        os_delay_us((_timeout - 1) * 10);
 
-    /* Wait for pull-up ack signal */
-    _timeout = 8;
+    /* Wait for pull-up ACK signal */
+    _timeout = 9;
     while (!_dht_dq_read()) {
         os_delay_us(10);
-        _timeout--;
-        if (!_timeout) {
-            _dht_reset_dq();
+        if (!_timeout--) {
             return DHT_IO_ACK_L_ERROR;
         }
     }
 
     /* Wait for pull-down of the previous ACK and begining of the transmission. */
-    _timeout = 8 - _timeout;
-    while (_dht_dq_read()) {
-        os_delay_us(10);
-        _timeout--;
-        if (!_timeout) {
-            _dht_reset_dq();
-            return DHT_IO_ACK_H_ERROR;
+    if (_timeout) {
+        while (_dht_dq_read()) {
+            os_delay_us(10);
+            if (!_timeout--) {
+                return DHT_IO_ACK_H_ERROR;
+            }
         }
     }
 
@@ -98,17 +103,15 @@ enum dht_io_result dht_read_data(uint8_t *buf) {
         for (i = 0; i < 8; i++) {
 
             /* Wait for pull-up that signalizes begining oth the transmitted bit.  */
-            _timeout = 7;
+            _timeout = 6;
             while (!_dht_dq_read()) {
                 os_delay_us(10);
-                _timeout--;
-                if (!_timeout) {
-                    _dht_reset_dq();
+                if (!_timeout--) {
                     return DHT_IO_TIMEOUT_L_ERROR;
                 }
             }
 
-            os_delay_us(30);
+            os_delay_us(35);
             if (_dht_dq_read()) {
                 _result |= _BV(7 - i);
 
@@ -116,9 +119,7 @@ enum dht_io_result dht_read_data(uint8_t *buf) {
                 _timeout = 5;
                 while (_dht_dq_read()) {
                     os_delay_us(10);
-                    _timeout--;
-                    if (!_timeout) {
-                        _dht_reset_dq();
+                    if (!_timeout--) {
                         return DHT_IO_TIMEOUT_H_ERROR;
                     }
                 }
@@ -127,10 +128,8 @@ enum dht_io_result dht_read_data(uint8_t *buf) {
         *(buf + j) = _result;
     }
 
-    /* Reset port. */
-    _dht_reset_dq();
-
-    if (buf[0] + buf[1] + buf[2] + buf[3] != buf[4]) {
+    _sum = buf[0] + buf[1] + buf[2] + buf[3];
+    if (_sum != buf[4]) {
         return DHT_IO_CHECKSUM_ERROR;
     } else {
         return DHT_IO_OK;
