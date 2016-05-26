@@ -22,7 +22,7 @@
 #include "dht.h"
 
 /** GPIO DG pin. */
-#define DHT22_GPIO_DQ   2
+#define DHT22_GPIO_DQ   14
 
 void dht22_init(void);
 

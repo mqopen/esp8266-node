@@ -27,13 +27,15 @@
 #elif CONFIG_SENSOR_DHT_GPIO_DQ == 2
   #define DHT_DQ_MUX PERIPHS_IO_MUX_GPIO2_U
   #define DHT_DQ_FUNC FUNC_GPIO2
+#elif CONFIG_BUS_ONEWIRE_GPIO_DQ == 13
+  #define DHT_DQ_MUX PERIPHS_IO_MUX_MTCK_U
+  #define DHT_DQ_FUNC FUNC_GPIO13
 #elif CONFIG_SENSOR_DHT_GPIO_DQ == 14
   #define DHT_DQ_MUX PERIPHS_IO_MUX_MTMS_U
   #define DHT_DQ_FUNC FUNC_GPIO14
 #else
   #error Unsupported DHT DQ pin number!
 #endif
-
 
 enum dht_io_result {
     DHT_IO_OK,                      /**< Communication was successful. */
