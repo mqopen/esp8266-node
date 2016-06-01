@@ -92,11 +92,10 @@ struct umqtt_connection {
     /** Pointer to message handler function. */
     void (*message_callback)(struct umqtt_connection *, char *topic, uint8_t *data, uint16_t len);
 
-    /* Private */
-    /* ack counters - incremented on sending, decremented on ack */
-    int16_t nack_publish;
-    int16_t nack_subscribe;
-    int16_t nack_ping;
+    /* Private. ACK counters - incremented on sending, decremented on ACK. */
+    int16_t nack_publish;                   /**< PUBLISH ACK counter. */
+    int16_t nack_subscribe;                 /**< SUBSCRIBE ACK counter. */
+    int16_t nack_ping;                      /**< PINGREQ ACK counter. */
     int16_t message_id;
     uint8_t work_buf[5];
     int16_t work_read;

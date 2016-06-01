@@ -24,16 +24,20 @@
 #include "user_config.h"
 #include "umqtt.h"
 #include "actsig.h"
-#include "sensor.h"
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #include "sensor.h"
+#endif
 #include "common.h"
 #include "mqttclient.h"
 
 /** Timer for ending MQTT Keep Alive messages. */
 static os_timer_t _keep_alive_timer;
 
-#if SENSOR_TYPE_SYNCHRONOUS
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #if SENSOR_TYPE_SYNCHRONOUS
 /** Timer for sending DHT measurements. */
 static os_timer_t  _publish_timer;
+  #endif
 #endif
 
 /** Timer for limit reconnect attempts. */
@@ -55,6 +59,12 @@ static struct espconn _mqttclient_espconn = {
 
 static uint8_t _mqttclient_tx_buffer[200];
 static uint8_t _mqttclient_rx_buffer[200];
+static uint8_t _rx_buf[200];
+
+/**
+ * Handle PUBLISH message from broker.
+ */
+static void ICACHE_FLASH_ATTR _mqttclient_on_publish(struct umqtt_connection *_m, char *topic, uint8_t *data, uint16_t len);
 
 /** MQTT connection structure instance. */
 static struct umqtt_connection _mqtt = {
@@ -67,6 +77,7 @@ static struct umqtt_connection _mqtt = {
         .length = sizeof(_mqttclient_rx_buffer),
     },
     .state = UMQTT_STATE_INIT,
+    .message_callback = _mqttclient_on_publish,
 };
 
 /** MQTT connection configuration. */
@@ -88,13 +99,20 @@ static bool _keep_alive_sending = false;
 /** Keep track if publish message send is in progress. */
 static bool _publish_sending = false;
 
+#if ENABLE_DEVICE_CLASS_REACTOR
+/** Flag to keep track that MQTT client is subscribed to configured topics. */
+static bool _mqttclient_topics_subscribed = false;
+#endif
+
 /* Static function prototypes. */
 
-#if SENSOR_TYPE_SYNCHRONOUS
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #if SENSOR_TYPE_SYNCHRONOUS
 /**
  * Publish MQTT data to broker.
  */
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void);
+  #endif
 #endif
 
 /**
@@ -189,8 +207,17 @@ static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void);
 
 static void ICACHE_FLASH_ATTR _mqttclient_reset_buffers(void);
 
-#if SENSOR_TYPE_ASYNCHRONOUS
+#if ENABLE_DEVICE_CLASS_REACTOR
+/**
+ * Subscribe to configured MQTT topics
+ */
+static void ICACHE_FLASH_ATTR _mqttclient_subscribe(void);
+#endif
+
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #if SENSOR_TYPE_ASYNCHRONOUS
 static void _mqttclient_async_callback(uint8_t topic_index);
+  #endif
 #endif
 
 void ICACHE_FLASH_ATTR mqttclient_init(void) {
@@ -201,27 +228,34 @@ void ICACHE_FLASH_ATTR mqttclient_init(void) {
 
     /* Initiate timers. */
     os_timer_disarm(&_keep_alive_timer);
-#if SENSOR_TYPE_SYNCHRONOUS
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #if SENSOR_TYPE_SYNCHRONOUS
     os_timer_disarm(&_publish_timer);
+  #endif
 #endif
     os_timer_disarm(&_reconnect_timer);
 
     /* Assign functions for timers. */
     os_timer_setfn(&_keep_alive_timer, (os_timer_func_t *) _mqttclient_umqtt_keep_alive, NULL);
-#if SENSOR_TYPE_SYNCHRONOUS
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #if SENSOR_TYPE_SYNCHRONOUS
     os_timer_setfn(&_publish_timer, (os_timer_func_t *) _mqttclient_publish, NULL);
+  #endif
 #endif
     os_timer_setfn(&_reconnect_timer, (os_timer_func_t *) _mqttclient_do_reconnect, NULL);
 
     umqtt_init(&_mqtt);
     _mqttclient_reset_buffers();
 
-#if SENSOR_TYPE_ASYNCHRONOUS
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #if SENSOR_TYPE_ASYNCHRONOUS
     sensor_register_notify_callback(_mqttclient_async_callback);
+  #endif
 #endif
 }
 
-#if SENSOR_TYPE_ASYNCHRONOUS
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #if SENSOR_TYPE_ASYNCHRONOUS
 static void _mqttclient_async_callback(uint8_t topic_index) {
     uint8_t _topic_len;
     uint8_t _data_len;
@@ -238,6 +272,7 @@ static void _mqttclient_async_callback(uint8_t topic_index) {
         _mqttclient_data_send();
     }
 }
+  #endif
 #endif
 
 void ICACHE_FLASH_ATTR mqttclient_start(void) {
@@ -303,6 +338,13 @@ static void ICACHE_FLASH_ATTR _mqttclient_disconnect_callback(void *arg) {
         _mqttclient_schedule_reconnect();
 }
 
+#if ENABLE_DEVICE_CLASS_REACTOR
+static void ICACHE_FLASH_ATTR _mqttclient_subscribe(void) {
+    umqtt_subscribe(&_mqtt, "test/topic");
+    //_mqttclient_data_send();
+}
+#endif
+
 static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void) {
     _mqttclient_stop_mqtt_timers();
     actsig_set_normal_off(&_activity_signal);
@@ -329,6 +371,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_received(void *arg, char *pdata, 
                         (uint8_t *) CONFIG_MQTT_PRESENCE_ONLINE,
                         sizeof(CONFIG_MQTT_PRESENCE_ONLINE) - 1,
                         _BV(UMQTT_OPT_RETAIN));
+
+        _mqttclient_subscribe();
     }
     _mqttclient_data_send();
 }
@@ -342,7 +386,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_data_sent(void *arg) {
     _mqttclient_data_send();
 }
 
-#if SENSOR_TYPE_SYNCHRONOUS
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #if SENSOR_TYPE_SYNCHRONOUS
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
     uint8_t _i;
     uint8_t _topic_len;
@@ -363,6 +408,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
         _mqttclient_data_send();
     }
 }
+  #endif
 #endif
 
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
@@ -375,19 +421,21 @@ static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
 
 static void ICACHE_FLASH_ATTR _mqttclient_start_mqtt_timers(void) {
     os_timer_arm(&_keep_alive_timer, CONFIG_MQTT_KEEPALIVE_REQUEST_INTERVAL * 1000, 1);
-#if SENSOR_TYPE_SYNCHRONOUS
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #if SENSOR_TYPE_SYNCHRONOUS
     os_timer_arm(&_publish_timer, CONFIG_MQTT_PUBLISH_INTERVAL * 1000, 1);
+  #endif
 #endif
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_stop_mqtt_timers(void) {
     os_timer_disarm(&_keep_alive_timer);
-#if SENSOR_TYPE_SYNCHRONOUS
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #if SENSOR_TYPE_SYNCHRONOUS
     os_timer_disarm(&_publish_timer);
+  #endif
 #endif
 }
-
-static uint8_t _rx_buf[200];
 
 static void ICACHE_FLASH_ATTR _mqttclient_data_send(void) {
     if (!_message_sending) {
@@ -416,4 +464,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_broker_connect(void) {
 static void ICACHE_FLASH_ATTR _mqttclient_reset_buffers(void) {
     umqtt_circ_init(&_mqtt.txbuff);
     umqtt_circ_init(&_mqtt.rxbuff);
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_on_publish(struct umqtt_connection *_m, char *topic, uint8_t *data, uint16_t len) {
+    os_printf("on publish\r\n");
 }

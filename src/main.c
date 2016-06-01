@@ -22,7 +22,9 @@
 #include "uart.h"
 #include "node.h"
 #include "bus.h"
-#include "sensor.h"
+#if ENABLE_DEVICE_CLASS_SENSOR
+  #include "sensor.h"
+#endif
 #include "network.h"
 #include "mqttclient.h"
 
@@ -35,7 +37,9 @@ void ICACHE_FLASH_ATTR user_init(void) {
     network_init();
     node_init();
     bus_init();
+#if ENABLE_DEVICE_CLASS_SENSOR
     sensor_init();
+#endif
     mqttclient_init();
     system_init_done_cb(network_connect);
     node_update_state(NODE_STATE_INIT);

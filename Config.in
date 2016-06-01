@@ -5,9 +5,34 @@
 
 mainmenu "Firmware Configuration"
 
+choice
+	prompt "Device class"
+	default DEVICE_CLASS_SENSOR
+
+config DEVICE_CLASS_SENSOR
+	bool "Sensor"
+	help
+	  Sensor device reads data from various peripherals and sends them to
+	  the MQTT network.
+
+config DEVICE_CLASS_REACTOR
+	bool "Reactor"
+	help
+	  Reactor devices reads data from MQTT network and takes appropriate
+	  reaction.
+
+endchoice
+
 source "Config.general"
 source "Config.wireless"
 source "Config.network"
 source "Config.mqtt"
+
+if DEVICE_CLASS_SENSOR
 source "Config.sensor"
+endif # DEVICE_CLASS_SENSOR
+
+if DEVICE_CLASS_REACTOR
+endif # DEVICE_CLASS_REACTOR
+
 source "Config.bus"
