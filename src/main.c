@@ -27,7 +27,7 @@
 #endif
 #include "network.h"
 #include "mqttclient.h"
-
+#include "actsig.h"
 
 void ICACHE_FLASH_ATTR user_rf_pre_init(void) {
 }
@@ -41,6 +41,8 @@ void ICACHE_FLASH_ATTR user_init(void) {
     sensor_init();
 #endif
     mqttclient_init();
+    actsig_init(&_mqttclient_activity_signal, CONFIG_MQTT_ACTIVITY_LED_BLINK_TRANSMITT_DELAY);
+    actsig_set_normal_off(&_mqttclient_activity_signal);
     system_init_done_cb(network_connect);
     node_update_state(NODE_STATE_INIT);
 }
