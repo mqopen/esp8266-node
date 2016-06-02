@@ -18,6 +18,8 @@
 #ifndef __SENSOR_DS18B20_H__
 #define __SENSOR_DS18B20_H__
 
+#define SENSOR_NAME "ds18b20"
+
 #define sensor_init ds18b20_init
 
 /**

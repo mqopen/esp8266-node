@@ -5,7 +5,7 @@ obj-y       += gpio16.o main.o mqttclient.o network.o node.o uart.o \
                 umqtt.o bus.o
 
 obj-$(CONFIG_DEVICE_CLASS_SENSOR)   += sensor.o
-obj-$(CONFIG_MQTT_ACTIVITY_LED)     += actsig.o
+obj-$(CONFIG_MQTT_ACTIVITY_LED)     += actsig.o commsig.o
 obj-$(CONFIG_BUS_I2C)               += i2c_master.o
 obj-$(CONFIG_BUS_ONEWIRE)           += onewire.o
 obj-$(CONFIG_SENSOR_BMP180)         += bmp180.o sensor_bmp180.o

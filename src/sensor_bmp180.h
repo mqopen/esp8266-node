@@ -18,6 +18,8 @@
 #ifndef __SENSOR_BMP180_H__
 #define __SENSOR_BMP180_H__
 
+#define SENSOR_NAME "bmp180"
+
 #define sensor_init bmp180_init
 
 /**

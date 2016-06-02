@@ -20,6 +20,8 @@
 
 #include "dht.h"
 
+#define SENSOR_NAME "dht"
+
 #define sensor_init dht_init
 
 /**

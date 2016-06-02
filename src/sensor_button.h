@@ -18,6 +18,8 @@
 #ifndef __SENSOR_BUTTON_H__
 #define __SENSOR_BUTTON_H__
 
+#define SENSOR_NAME "button"
+
 /* Declare asynchrounous sensor type. */
 #define SENSOR_TYPE_ASYNCHRONOUS    1
 

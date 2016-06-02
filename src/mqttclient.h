@@ -35,6 +35,28 @@ enum mqttclient_state {
 };
 
 /**
+ * Phases of communication with MQTT broker.
+ */
+enum mqttclient_comm_state {
+    MQTTCLIENT_COMM_INIT,                   /**< Initial phase. */
+    MQTTCLIENT_COMM_CONNECTED,              /**< Messages CONNECT and CONNACK
+                                                    exchanged successfully. */
+    MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED,     /**< Initial PUBLISH messages sent. */
+    MQTTCLIENT_COMM_SUBSCRIBED,             /**< Subscribed to MQTT topics. */
+    MQTTCLIENT_COMM_OPERATIONAL,            /**< MQTT client is operational. */
+};
+
+/**
+ * Initial PUBLISH item.
+ */
+struct mqttclient_init_seq_item {
+    char *topic;
+    uint8_t *value;
+    uint16_t value_len;
+    uint8_t flags;
+};
+
+/**
  * Initialize MQTT client.
  */
 void ICACHE_FLASH_ATTR mqttclient_init(void);

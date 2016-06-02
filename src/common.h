@@ -26,7 +26,17 @@
 #define STR(x) _STR(x)
 
 #define TOPIC(t)            CONFIG_GENERAL_DEVICE_LOCATION "/" t
-#define TOPIC_PRESENCE(t)   "presence/" t
+#define __topic_service     "i/" CONFIG_GENERAL_DEVICE_NAME
+#define __topic_presence    __topic_service "/presence"
+#define __topic_arch        __topic_service "/arch"
+#define __topic_variant     __topic_service "/variant"
+#define __topic_link        __topic_service "/link"
+#define __topic_ip          __topic_service "/ip"
+#define __topic_class       __topic_service "/class"
+#define __topic_sensor      __topic_service "/sensor"
+
+
+//#define TOPIC_PRESENCE(t)   "presence/" t
 
 /** Get length of string. */
 #define __sizeof_str(s)     (sizeof(s) - 1)
