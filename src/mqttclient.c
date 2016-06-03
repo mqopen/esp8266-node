@@ -27,6 +27,10 @@
 #if ENABLE_DEVICE_CLASS_SENSOR
   #include "sensor.h"
 #endif
+#if ENABLE_DEVICE_CLASS_REACTOR
+  #include "reactor.h"
+#endif
+#include "version.h"
 #include "common.h"
 #include "mqttclient.h"
 
@@ -106,6 +110,18 @@ static struct mqttclient_init_seq_item _mqttclient_init_seq_items[] = {
         .flags = _BV(UMQTT_OPT_RETAIN),
     },
     {
+        .topic = __topic_fwversion,
+        .value = (uint8_t *) VERSION,
+        .value_len = __sizeof_str(VERSION),
+        .flags = _BV(UMQTT_OPT_RETAIN),
+    },
+    {
+        .topic = __topic_hwversion,
+        .value = (uint8_t *) CONFIG_GENERAL_HW_VERSION,
+        .value_len = __sizeof_str(CONFIG_GENERAL_HW_VERSION),
+        .flags = _BV(UMQTT_OPT_RETAIN),
+    },
+    {
         .topic = __topic_arch,
         .value = (uint8_t *) "esp",
         .value_len = __sizeof_str("esp"),
@@ -167,12 +183,16 @@ static struct mqttclient_init_seq_item _mqttclient_init_seq_items[] = {
 static uint8_t _mqttclient_init_seq_items_index = 0;
 
 /** Array of subscribe topics. Last element if NULL poiner. */
+#if ENABLE_DEVICE_CLASS_REACTOR
+  #define _mqttclient_subscribe_topics reactor_subscribe_topics
+  #define __mqttclient_subscribe_topics_count reactor_subscribe_topics_count
+#else
 static char *_mqttclient_subscribe_topics[] = {
-    "test/topic",
     NULL,
 };
+  #define __mqttclient_subscribe_topics_count ((sizeof(_mqttclient_subscribe_topics) / sizeof(_mqttclient_subscribe_topics[0])) - 1)
+#endif
 
-#define __mqttclient_subscribe_topics_count ((sizeof(_mqttclient_subscribe_topics) / sizeof(_mqttclient_subscribe_topics[0])) - 1)
 
 static uint8_t _mqttclient_subscribe_topics_index = 0;
 
@@ -184,11 +204,6 @@ static bool _keep_alive_sending = false;
 
 /** Keep track if publish message send is in progress. */
 static bool _publish_sending = false;
-
-//#if ENABLE_DEVICE_CLASS_REACTOR
-///** Flag to keep track that MQTT client is subscribed to configured topics. */
-//static bool _mqttclient_topics_subscribed = false;
-//#endif
 
 /* Static function prototypes. */
 
@@ -267,6 +282,16 @@ static void ICACHE_FLASH_ATTR _mqttclient_broker_connect(void);
 static void ICACHE_FLASH_ATTR _mqttclient_send_init_sequence(void);
 
 /**
+ * Subscribe to configured MQTT topics
+ */
+static void ICACHE_FLASH_ATTR _mqttclient_subscribe(void);
+
+/**
+ * Reset all indexes to communication initialization data.
+ */
+static inline void _mqttclient_reset_comm_indexes(void);
+
+/**
  * Send keep alive message to MQTT broker.
  */
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void);
@@ -292,8 +317,14 @@ static void ICACHE_FLASH_ATTR _mqttclient_send_callback(void *arg);
  */
 static void ICACHE_FLASH_ATTR _mqttclient_received_callback(void *arg, char *pdata, unsigned short len);
 
+/**
+ * Update communication progress state.
+ */
 static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void);
 
+/**
+ * Progress communication.
+ */
 static void ICACHE_FLASH_ATTR _mqttclient_check_comm_progress(void);
 
 /**
@@ -308,13 +339,6 @@ static inline void _mqttclient_schedule_reconnect(void);
  */
 static void ICACHE_FLASH_ATTR _mqttclient_publish(void);
   #endif
-#endif
-
-#if ENABLE_DEVICE_CLASS_REACTOR
-/**
- * Subscribe to configured MQTT topics
- */
-static void ICACHE_FLASH_ATTR _mqttclient_subscribe(void);
 #endif
 
 #if ENABLE_DEVICE_CLASS_SENSOR
@@ -403,6 +427,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
 
 static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void) {
     _mqttclient_stop_mqtt_timers();
+    _mqttclient_reset_comm_indexes();
     commsig_connection_status(false);
 }
 
@@ -463,7 +488,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_broker_connect(void) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_send_init_sequence(void) {
-    os_printf("Publishing %d....\r\n", __mqttclient_subscribe_topics_count);
     umqtt_publish(
         &_mqttclient_mqtt,
         _mqttclient_init_seq_items[_mqttclient_init_seq_items_index].topic,
@@ -471,6 +495,17 @@ static void ICACHE_FLASH_ATTR _mqttclient_send_init_sequence(void) {
         _mqttclient_init_seq_items[_mqttclient_init_seq_items_index].value_len,
         _mqttclient_init_seq_items[_mqttclient_init_seq_items_index].flags);
     _mqttclient_init_seq_items_index++;
+}
+
+static void ICACHE_FLASH_ATTR _mqttclient_subscribe(void) {
+    os_printf("Subscribing %d...\r\n", __mqttclient_subscribe_topics_count);
+    umqtt_subscribe(&_mqttclient_mqtt, _mqttclient_subscribe_topics[_mqttclient_subscribe_topics_index]);
+    _mqttclient_subscribe_topics_index++;
+}
+
+static inline void _mqttclient_reset_comm_indexes(void) {
+    _mqttclient_init_seq_items_index = 0;
+    _mqttclient_subscribe_topics_index = 0;
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
@@ -528,7 +563,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
     if (_mqttclient_comm_state != MQTTCLIENT_COMM_OPERATIONAL) {
         if (_mqttclient_comm_state == MQTTCLIENT_COMM_CONNECTED) {
             if (_mqttclient_init_seq_items_index == __mqttclient_init_seq_items_count) {
-                os_printf("published\r\n");
                 _mqttclient_comm_state = MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED;
             }
         }
@@ -609,14 +643,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
   #endif
 #endif
 
-#if ENABLE_DEVICE_CLASS_REACTOR
-static void ICACHE_FLASH_ATTR _mqttclient_subscribe(void) {
-    os_printf("Subscribing\r\n");
-    umqtt_subscribe(&_mqttclient_mqtt, _mqttclient_subscribe_topics[_mqttclient_subscribe_topics_index]);
-    _mqttclient_subscribe_topics_index++;
-}
-#endif
-
 static void ICACHE_FLASH_ATTR _mqttclient_on_publish(struct umqtt_connection *_m, char *topic, uint8_t *data, uint16_t len) {
-    os_printf("on publish\r\n");
+#if ENABLE_DEVICE_CLASS_REACTOR
+    reactor_on_data(topic, data, len);
+#endif
 }

@@ -5,12 +5,16 @@ obj-y       += gpio16.o main.o mqttclient.o network.o node.o uart.o \
                 umqtt.o bus.o
 
 obj-$(CONFIG_DEVICE_CLASS_SENSOR)   += sensor.o
+obj-$(CONFIG_DEVICE_CLASS_REACTOR)  += reactor.o
 obj-$(CONFIG_MQTT_ACTIVITY_LED)     += actsig.o commsig.o
 obj-$(CONFIG_BUS_I2C)               += i2c_master.o
 obj-$(CONFIG_BUS_ONEWIRE)           += onewire.o
+
 obj-$(CONFIG_SENSOR_BMP180)         += bmp180.o sensor_bmp180.o
 obj-$(CONFIG_SENSOR_DHT22)          += dht22.o dht.o sensor_dht.o
 obj-$(CONFIG_SENSOR_DHT11)          += dht11.o dht.o sensor_dht.o
 obj-$(CONFIG_SENSOR_BH1750FVI)      += bh1750fvi.o sensor_bh1750fvi.o
 obj-$(CONFIG_SENSOR_DS18B20)        += ds18b20.o sensor_ds18b20.o
 obj-$(CONFIG_SENSOR_BUTTON)         += button.o sensor_button.o
+
+obj-$(CONFIG_REACTOR_PINSTATE)         += pinstate.o reactor_pinstate.o

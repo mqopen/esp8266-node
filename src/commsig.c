@@ -15,26 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SENSOR_DS18B20_H__
-#define __SENSOR_DS18B20_H__
+#include <c_types.h>
+#include "actsig.h"
+#include "commsig.h"
 
-#include "ds18b20.h"
+/** Signal network activity. */
+static struct actsig_signal _commsig_signal;
 
-#define SENSOR_NAME "ds18b20"
+void commsig_init(void) {
+    actsig_init(&_commsig_signal, CONFIG_MQTT_ACTIVITY_LED_BLINK_TRANSMITT_DELAY);
+    actsig_set_normal_off(&_commsig_signal);
+}
 
-#define sensor_init ds18b20_init
+void commsig_connection_status(bool status) {
+    if (status) {
+        actsig_set_normal_on(&_commsig_signal);
+    } else {
+        actsig_set_normal_off(&_commsig_signal);
+    }
+}
 
-/**
- * Possible values are:
- *  - 'xxx.xxx'             : len = 7 (temperature, humidity)
- *  - 'E_WRITE_ADDRESS'     : len = 15
- *  - 'E_WRITE_REGISTER'    : len = 16
- *  - 'E_WRITE_VALUE'       : len = 13
- *  - 'E_READ_ADDRESS'      : len = 14
- *  - 'E_INVALID_DATA'      : len = 14
- *
- * maxium possible length: 16 Bytes
- */
-#define SENSOR_VALUE_BUFFER_SIZE    16
-
-#endif
+void commsig_notify(void)   {
+    actsig_notify(&_commsig_signal);
+}

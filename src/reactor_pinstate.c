@@ -15,26 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SENSOR_DS18B20_H__
-#define __SENSOR_DS18B20_H__
+#include <c_types.h>
+#include <osapi.h>
+#include "reactor.h"
+#include "reactor_pinstate.h"
 
-#include "ds18b20.h"
+__reactor_subscribe_topics(
+    CONFIG_REACTOR_PINSTATE_TOPIC
+)
 
-#define SENSOR_NAME "ds18b20"
-
-#define sensor_init ds18b20_init
-
-/**
- * Possible values are:
- *  - 'xxx.xxx'             : len = 7 (temperature, humidity)
- *  - 'E_WRITE_ADDRESS'     : len = 15
- *  - 'E_WRITE_REGISTER'    : len = 16
- *  - 'E_WRITE_VALUE'       : len = 13
- *  - 'E_READ_ADDRESS'      : len = 14
- *  - 'E_INVALID_DATA'      : len = 14
- *
- * maxium possible length: 16 Bytes
- */
-#define SENSOR_VALUE_BUFFER_SIZE    16
-
-#endif
+extern void reactor_on_data(char *topic, uint8_t *data, uint16_t data_len) {
+    os_printf("on publish\r\n");
+}

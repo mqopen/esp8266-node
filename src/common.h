@@ -18,6 +18,8 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#include <c_types.h>
+
 #define _BV(b)      (1<<(b))
 #define abs(x)      ((x)<0?(-x):(x))
 #define max(x, y)   ((x)<(y)?(y):(x))
@@ -34,6 +36,8 @@
 #define __topic_ip          __topic_service "/ip"
 #define __topic_class       __topic_service "/class"
 #define __topic_sensor      __topic_service "/sensor"
+#define __topic_fwversion   __topic_service "/fwversion"
+#define __topic_hwversion   __topic_service "/hwversion"
 
 
 //#define TOPIC_PRESENCE(t)   "presence/" t

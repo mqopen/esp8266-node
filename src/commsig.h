@@ -15,26 +15,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SENSOR_DS18B20_H__
-#define __SENSOR_DS18B20_H__
+/**
+ * Signalization of network communication.
+ */
 
-#include "ds18b20.h"
+#ifndef __COMMSIG_H__
+#define __COMMSIG_H__
 
-#define SENSOR_NAME "ds18b20"
-
-#define sensor_init ds18b20_init
+#include <c_types.h>
 
 /**
- * Possible values are:
- *  - 'xxx.xxx'             : len = 7 (temperature, humidity)
- *  - 'E_WRITE_ADDRESS'     : len = 15
- *  - 'E_WRITE_REGISTER'    : len = 16
- *  - 'E_WRITE_VALUE'       : len = 13
- *  - 'E_READ_ADDRESS'      : len = 14
- *  - 'E_INVALID_DATA'      : len = 14
- *
- * maxium possible length: 16 Bytes
+ * Initialize communication signalization.
  */
-#define SENSOR_VALUE_BUFFER_SIZE    16
+void commsig_init(void);
+
+/**
+ * Notify about connection status.
+ *
+ * @param status Connection status. True for established connection, False otherwise.
+ */
+void commsig_connection_status(bool status);
+
+/**
+ * Notify communication.
+ */
+void commsig_notify(void);
 
 #endif

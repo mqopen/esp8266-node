@@ -33,6 +33,7 @@ source "Config.sensor"
 endif # DEVICE_CLASS_SENSOR
 
 if DEVICE_CLASS_REACTOR
+source "Config.reactor"
 endif # DEVICE_CLASS_REACTOR
 
 source "Config.bus"

@@ -17,4 +17,10 @@ config GENERAL_DEVICE_LOCATION
 
 	  Location is used to build MQTT topic for the sensor.
 
+config GENERAL_HW_VERSION
+	string "HW version"
+	default "0.1.0"
+	help
+	  Specify used HW version.
+
 endmenu
