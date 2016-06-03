@@ -15,25 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __DATAUTILS_H__
+#define __DATAUTILS_H__
+
 #include <c_types.h>
-#include <osapi.h>
-#include "common.h"
-#include "datautils.h"
-#include "reactor.h"
-#include "reactor_pinstate.h"
 
-__reactor_subscribe_topics(
-    CONFIG_REACTOR_PINSTATE_TOPIC
-)
+/**
+ * Convert buffer to int32_t value.
+ */
+uint8_t datautils_data_to_int32(int32_t *val, uint8_t *buf, uint16_t len);
 
-extern void reactor_on_data(char *topic, uint8_t *data, uint16_t data_len) {
-    int32_t value;
-    if (os_memcmp(
-            CONFIG_REACTOR_PINSTATE_TOPIC,
-            topic,
-            __sizeof_str(CONFIG_REACTOR_PINSTATE_TOPIC)) == 0) {
-        if (!datautils_data_to_int32(&value, data, data_len)) {
-            pinstate_update(value);
-        }
-    }
-}
+#endif

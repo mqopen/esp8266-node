@@ -18,6 +18,10 @@
 #ifndef __PINSTATE_H__
 #define __PINSTATE_H__
 
+#include <c_types.h>
+
 void pinstate_init(void);
+
+void pinstate_update(int32_t value);
 
 #endif

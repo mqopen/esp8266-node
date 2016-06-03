@@ -15,7 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <c_types.h>
 #include "pinstate.h"
 
+static _pinstate_state;
+
+void _pinstate_set(bool state);
+
+bool _pinstate_get(void);
+
 void pinstate_init(void) {
+    _pinstate_state = false;
+}
+
+void pinstate_update(int32_t value) {
+}
+
+void _pinstate_set(bool state) {
+    _pinstate_state = state;
+}
+
+bool _pinstate_get(void) {
+    return _pinstate_state;
 }
