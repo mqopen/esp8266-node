@@ -18,7 +18,7 @@
 #ifndef __SENSOR_BH1750FVI_H__
 #define __SENSOR_BH1750FVI_H__
 
-#include "hb1750fvi.h"
+#include "bh1750fvi.h"
 
 #define SENSOR_NAME "bh1750fvi"
 

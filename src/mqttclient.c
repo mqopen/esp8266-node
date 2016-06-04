@@ -498,7 +498,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_send_init_sequence(void) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_subscribe(void) {
-    os_printf("Subscribing %d...\r\n", __mqttclient_subscribe_topics_count);
     umqtt_subscribe(&_mqttclient_mqtt, _mqttclient_subscribe_topics[_mqttclient_subscribe_topics_index]);
     _mqttclient_subscribe_topics_index++;
 }
