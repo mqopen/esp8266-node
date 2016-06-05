@@ -20,7 +20,13 @@
 
 #include "dht.h"
 
-#define SENSOR_NAME "dht"
+#if ENABLE_SENSOR_DHT22
+  #define SENSOR_NAME "dht22"
+#elif ENABLE_SENSOR_DHT11
+  #define SENSOR_NAME "dht11"
+#else
+  #error Unsupported DHT variant.
+#endif
 
 #define sensor_init dht_init
 
