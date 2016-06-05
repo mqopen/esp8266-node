@@ -36,11 +36,10 @@
 #define __topic_ip          __topic_service "/ip"
 #define __topic_class       __topic_service "/class"
 #define __topic_sensor      __topic_service "/sensor"
+#define __topic_reactor     __topic_service "/reactor"
 #define __topic_fwversion   __topic_service "/fwversion"
 #define __topic_hwversion   __topic_service "/hwversion"
 
-
-//#define TOPIC_PRESENCE(t)   "presence/" t
 
 /** Get length of string. */
 #define __sizeof_str(s)     (sizeof(s) - 1)

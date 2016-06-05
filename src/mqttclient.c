@@ -168,6 +168,15 @@ static struct mqttclient_init_seq_item _mqttclient_init_seq_items[] = {
     },
 #endif
 
+#if ENABLE_DEVICE_CLASS_REACTOR
+    {
+        .topic = __topic_reactor,
+        .value = (uint8_t *) REACTOR_NAME,
+        .value_len = __sizeof_str(REACTOR_NAME),
+        .flags = _BV(UMQTT_OPT_RETAIN),
+    },
+#endif
+
     /* NULL element. */
     {
         .topic = NULL,

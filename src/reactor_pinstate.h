@@ -18,7 +18,9 @@
 #ifndef __REACTOR_PINSTATE_H__
 #define __REACTOR_PINSTATE_H__
 
-#define REACTOR_NAME "pinstate.h"
+#include "pinstate.h"
+
+#define REACTOR_NAME "pinstate"
 
 #define reactor_init pinstate_init
 
