@@ -1,0 +1,22 @@
+menu "Reactor Settings"
+choice
+	prompt "Type"
+	default REACTOR_PINSTATE
+	help
+	  Configure reactor type.
+
+config REACTOR_PINSTATE
+	bool "Pinstate"
+	help
+	  Change pin state based on received MQTT topic value.
+
+endchoice
+
+config REACTOR_PINSTATE_TOPIC
+	string "Subscribe topic"
+	depends on REACTOR_PINSTATE
+	default "topic/value"
+	help
+	  Pinstate subscribe MQTT topic.
+
+endmenu
