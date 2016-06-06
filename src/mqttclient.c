@@ -177,6 +177,20 @@ static struct mqttclient_init_seq_item _mqttclient_init_seq_items[] = {
     },
 #endif
 
+#if ENABLE_DEVICE_CLASS_SENSOR
+    {
+        .topic = __topic_sync,
+  #if SENSOR_TYPE_SYNCHRONOUS
+        .value = (uint8_t *) "sync",
+        .value_len = __sizeof_str("sync"),
+  #else
+        .value = (uint8_t *) "async",
+        .value_len = __sizeof_str("async"),
+  #endif
+        .flags = _BV(UMQTT_OPT_RETAIN),
+    },
+#endif
+
     /* NULL element. */
     {
         .topic = NULL,

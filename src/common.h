@@ -39,6 +39,7 @@
 #define __topic_reactor     __topic_service "/reactor"
 #define __topic_fwversion   __topic_service "/fwversion"
 #define __topic_hwversion   __topic_service "/hwversion"
+#define __topic_sync        __topic_service "/sync"
 
 
 /** Get length of string. */
