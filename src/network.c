@@ -66,7 +66,7 @@ void ICACHE_FLASH_ATTR network_init(void) {
 
 static void ICACHE_FLASH_ATTR _network_config_address(void) {
 #if CONFIG_USE_DHCP
-#error "Not implemented yet"
+  #error Not implemented yet!
 #else
     wifi_set_opmode(STATIONAP_MODE);
     uint8_t ret;
@@ -106,7 +106,7 @@ static void ICACHE_FLASH_ATTR _network_wifi_event_callback(System_Event_t *event
     switch (event->event) {
         case EVENT_STAMODE_CONNECTED:
 #if CONFIG_USE_DHCP
-#error "Not implemented yet"
+  #error Not implemented yet
 #else
             _network_update_state(NETWORK_STATE_UP);
 #endif
