@@ -177,6 +177,37 @@ void button_init(void) {
     ETS_GPIO_INTR_ENABLE();
 }
 
+uint8_t button_is_active(enum button_event_id id) {
+    uint8_t i;
+    uint8_t _state;
+
+    /* Get button index. */
+    for (i = 0; i < _button_pins_count; i++) {
+        if (_button_enabled_pins[i].id == id)
+            break;
+    }
+
+    /* Check if button is active. */
+    _state = _button_enabled_pins[i].last_state;
+    switch (_button_enabled_pins[i].event) {
+        case _BUTTON_HIGH:
+            if (!_state) {
+                return 1;
+            } else {
+                break;
+            }
+        case _BUTTON_LOW:
+            if (_state) {
+                return 1;
+            } else {
+                break;
+            }
+        case _BUTTON_CHANGE:
+            return 1;
+    }
+    return 0;
+}
+
 static inline void _button_init_state(void) {
     uint8_t i;
     for (i = 0; i < _button_pins_count; i++) {

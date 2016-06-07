@@ -34,6 +34,19 @@
 #include "common.h"
 #include "mqttclient.h"
 
+/*
+ * Helper macro that defines whether MQTT client is configured to send some data
+ * to broker when initializing a MQTT connection.
+ *
+ * This is commonly needed for asynchronous sensors. When device connects to the
+ * network, it must send a sensor current state, if relevant.
+ */
+#if ENABLE_DEVICE_CLASS_SENSOR && SENSOR_TYPE_ASYNCHRONOUS
+  #define MQTTCLIENT_SEND_INITIAL_STATE     1
+#else
+  #define MQTTCLIENT_SEND_INITIAL_STATE     0
+#endif
+
 /** Timer for ending MQTT Keep Alive messages. */
 static os_timer_t _mqttclient_keep_alive_timer;
 
@@ -204,6 +217,12 @@ static struct mqttclient_init_seq_item _mqttclient_init_seq_items[] = {
 
 /** Index to current element of _mqttclient_init_seq_items array. */
 static uint8_t _mqttclient_init_seq_items_index = 0;
+
+#if MQTTCLIENT_SEND_INITIAL_STATE
+
+/** Number of remaining PUBLISH messages. */
+static uint8_t _mqttclient_send_init_state_remaining = 0;
+#endif
 
 /** Array of subscribe topics. Last element if NULL poiner. */
 #if ENABLE_DEVICE_CLASS_REACTOR
@@ -582,20 +601,39 @@ static void ICACHE_FLASH_ATTR _mqttclient_received_callback(void *arg, char *pda
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
+
+    /*
+     * Check if client isn't already in operational state. If it is, all communication
+     * initialization steps are already done.
+     */
     if (_mqttclient_comm_state != MQTTCLIENT_COMM_OPERATIONAL) {
+
+        /* Check if MQTT connection was just established. */
         if (_mqttclient_comm_state == MQTTCLIENT_COMM_CONNECTED) {
+
+            /* Check if all service topics has been published. */
             if (_mqttclient_init_seq_items_index == __mqttclient_init_seq_items_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED;
             }
         }
 
+        /* Check if all service topics has been published. */
         if (_mqttclient_comm_state == MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED) {
+#if MQTTCLIENT_SEND_INITIAL_STATE
+
+            _mqttclient_comm_state = MQTTCLIENT_COMM_INIT_STATE_PUBLISHED;
+#else
+            /* Check if all topics has been subscribed. */
             if (_mqttclient_subscribe_topics_index == __mqttclient_subscribe_topics_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_SUBSCRIBED;
             }
+#endif
         }
 
+        /* Check if all topics has been subscribed. */
         if (_mqttclient_comm_state == MQTTCLIENT_COMM_SUBSCRIBED) {
+
+            /* Enter operation state. */
             _mqttclient_comm_state = MQTTCLIENT_COMM_OPERATIONAL;
         }
     }
@@ -607,8 +645,15 @@ static void ICACHE_FLASH_ATTR _mqttclient_check_comm_progress(void) {
             _mqttclient_send_init_sequence();
             break;
         case MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED:
+#if MQTTCLIENT_SEND_INITIAL_STATE
+#else
             _mqttclient_subscribe();
+#endif
             break;
+#if MQTTCLIENT_SEND_INITIAL_STATE
+        case MQTTCLIENT_COMM_INIT_STATE_PUBLISHED:
+            break;
+#endif
         default:
             /* Do nothing. */
             break;

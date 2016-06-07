@@ -42,6 +42,9 @@ enum mqttclient_comm_state {
     MQTTCLIENT_COMM_CONNECTED,              /**< Messages CONNECT and CONNACK
                                                     exchanged successfully. */
     MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED,     /**< Initial PUBLISH messages sent. */
+#if ENABLE_DEVICE_CLASS_SENSOR && SENSOR_TYPE_ASYNCHRONOUS
+    MQTTCLIENT_COMM_INIT_STATE_PUBLISHED,   /**< Initial sensor state published. */
+#endif
     MQTTCLIENT_COMM_SUBSCRIBED,             /**< Subscribed to MQTT topics. */
     MQTTCLIENT_COMM_OPERATIONAL,            /**< MQTT client is operational. */
 };

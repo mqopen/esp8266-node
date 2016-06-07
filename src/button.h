@@ -18,6 +18,8 @@
 #ifndef __BUTTON_H__
 #define __BUTTON_H__
 
+#include <c_types.h>
+
 enum button_event_id {
 #if ENABLE_SENSOR_BUTTON_1
     BUTTON_ID_1,
@@ -27,6 +29,17 @@ enum button_event_id {
 #endif
 };
 
+/**
+ * Initialize button hardware.
+ */
 void button_init(void);
+
+/**
+ * Check if button is in active state.
+ *
+ * @param id Button ID.
+ * @return Non zero if button is in active state, zero otherwise.
+ */
+uint8_t button_is_active(enum button_event_id id);
 
 #endif

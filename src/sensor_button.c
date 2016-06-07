@@ -58,7 +58,6 @@ static struct sensor_str _sensor_button_topics[] = {
 #endif
 };
 
-
 /**
  * Values.
  */
@@ -98,6 +97,7 @@ static struct sensor_str _sensor_button_data[] = {
 };
 
 static sensor_notify_callback_t _sensor_notify_callback = NULL;
+
 static enum button_event_id _sensor_button_index[] = {
 #if ENABLE_SENSOR_BUTTON_1
     BUTTON_ID_1,
@@ -108,6 +108,12 @@ static enum button_event_id _sensor_button_index[] = {
 };
 
 const uint8_t sensor_topics_count = sizeof(_sensor_button_topics) / sizeof(_sensor_button_topics[0]);
+
+uint8_t sensor_get_initial_value(uint8_t index, char **buf, uint8_t *buf_len) {
+    *buf = _sensor_button_data[index].data;
+    *buf_len = _sensor_button_data[index].len;
+    return button_is_active(_sensor_button_index[index]);
+}
 
 void sensor_register_notify_callback(sensor_notify_callback_t callback) {
     _sensor_notify_callback = callback;
@@ -127,14 +133,20 @@ void sensor_button_notify(enum button_event_id id, uint8_t state) {
     switch (id) {
 #if ENABLE_SENSOR_BUTTON_1
         case BUTTON_ID_1:
+
+  /* MQTT topic changes only when button is configured as on change. */
   #if ENABLE_SENSOR_BUTTON_1_EVENTS_CHANGE
             if (state) {
+
+                /* High state message. */
                 os_memcpy(
                     _sensor_button_data[i].data,
                     CONFIG_SENSOR_BUTTON_1_EVENTS_HIGH_MESSAGE,
                     __sizeof_str(CONFIG_SENSOR_BUTTON_1_EVENTS_HIGH_MESSAGE));
                 _len = __sizeof_str(CONFIG_SENSOR_BUTTON_1_EVENTS_HIGH_MESSAGE);
             } else {
+
+                /* Low state message. */
                 os_memcpy(
                     _sensor_button_data[i].data,
                     CONFIG_SENSOR_BUTTON_1_EVENTS_LOW_MESSAGE,
@@ -147,14 +159,20 @@ void sensor_button_notify(enum button_event_id id, uint8_t state) {
 #endif
 #if ENABLE_SENSOR_BUTTON_2
         case BUTTON_ID_2:
+
+  /* MQTT topic changes only when button is configured as on change. */
   #if ENABLE_SENSOR_BUTTON_2_EVENTS_CHANGE
             if (state) {
+
+                /* High state message. */
                 os_memcpy(
                     _sensor_button_data[i].data,
                     CONFIG_SENSOR_BUTTON_2_EVENTS_HIGH_MESSAGE,
                     __sizeof_str(CONFIG_SENSOR_BUTTON_2_EVENTS_HIGH_MESSAGE));
                 _len = __sizeof_str(CONFIG_SENSOR_BUTTON_2_EVENTS_HIGH_MESSAGE);
             } else {
+
+                /* Low state message. */
                 os_memcpy(
                     _sensor_button_data[i].data,
                     CONFIG_SENSOR_BUTTON_2_EVENTS_LOW_MESSAGE,

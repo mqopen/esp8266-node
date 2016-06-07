@@ -77,7 +77,23 @@ extern void sensor_init(void);
  */
 extern enum sensor_io_result sensor_read(void);
 #else
+
+/**
+ * Register notofocation callback function.
+ *
+ * @param callback Pointer to callback function.
+ */
 extern void sensor_register_notify_callback(sensor_notify_callback_t callback);
+
+/**
+ * Get value of sensor at start up.
+ *
+ * @param index Index of measured value.
+ * @param buf Poiter to variable where function stores pointer to value string.
+ * @param buf_len Pointer to variable where to store string length.
+ * @return Non zero is value is relevant for initial state, zero otherwise.
+ */
+extern uint8_t sensor_get_initial_value(uint8_t index, char **buf, uint8_t *buf_len);
 #endif
 
 /**
@@ -92,7 +108,7 @@ extern char *sensor_get_topic(uint8_t index, uint8_t *buf_len);
 /**
  * Get address of measured value indentified by it's index.
  *
- * @param index Index of measired value.
+ * @param index Index of measured value.
  * @param buf_len Pointer to variable where to store string length.
  * @return Address of value string.
  */

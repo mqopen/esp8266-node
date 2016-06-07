@@ -268,6 +268,11 @@ config SENSOR_BUTTON_1_EVENTS_HIGH_MESSAGE
 	depends on SENSOR_BUTTON_1_EVENTS_CHANGE || SENSOR_BUTTON_1_EVENTS_HIGH
 	default "high"
 
+config SENSOR_BUTTON_1_PULLUP
+	bool "Use internal pull-up resistor for button 1"
+	depends on SENSOR_BUTTON_1
+	default y
+
 config SENSOR_BUTTON_1_GPIO_PIN
 	int "Button 1 GPIO pin number"
 	depends on SENSOR_BUTTON_1
@@ -313,6 +318,11 @@ config SENSOR_BUTTON_2_EVENTS_HIGH_MESSAGE
 	string "Button 2 on high message"
 	depends on SENSOR_BUTTON_2_EVENTS_CHANGE || SENSOR_BUTTON_2_EVENTS_HIGH
 	default "high"
+
+config SENSOR_BUTTON_2_PULLUP
+	bool "Use internal pull-up resistor for button 2"
+	depends on SENSOR_BUTTON_2
+	default y
 
 config SENSOR_BUTTON_2_GPIO_PIN
 	int "Button 2 GPIO pin number"
