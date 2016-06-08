@@ -85,6 +85,9 @@ extern enum sensor_io_result sensor_read(void);
  */
 extern void sensor_register_notify_callback(sensor_notify_callback_t callback);
 
+extern void sensor_notify_lock(void);
+extern void sensor_notify_release(void);
+
 /**
  * Get value of sensor at start up.
  *

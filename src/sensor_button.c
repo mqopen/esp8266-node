@@ -119,6 +119,12 @@ void sensor_register_notify_callback(sensor_notify_callback_t callback) {
     _sensor_notify_callback = callback;
 }
 
+void sensor_notify_lock(void) {
+}
+
+void sensor_notify_release(void) {
+}
+
 void sensor_button_notify(enum button_event_id id, uint8_t state) {
     uint8_t i = 0;
     uint8_t _len = 0;

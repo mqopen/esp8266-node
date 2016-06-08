@@ -42,4 +42,7 @@ void button_init(void);
  */
 uint8_t button_is_active(enum button_event_id id);
 
+inline void button_notify_lock(void);
+inline void button_notify_release(void);
+
 #endif

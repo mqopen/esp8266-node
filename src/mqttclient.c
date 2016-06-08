@@ -42,9 +42,9 @@
  * network, it must send a sensor current state, if relevant.
  */
 #if ENABLE_DEVICE_CLASS_SENSOR && SENSOR_TYPE_ASYNCHRONOUS
-  #define MQTTCLIENT_SEND_INITIAL_STATE     1
+  #define MQTTCLIENT_PUBLISH_INITIAL_STATE     1
 #else
-  #define MQTTCLIENT_SEND_INITIAL_STATE     0
+  #define MQTTCLIENT_PUBLISH_INITIAL_STATE     0
 #endif
 
 /** Timer for ending MQTT Keep Alive messages. */
@@ -218,10 +218,12 @@ static struct mqttclient_init_seq_item _mqttclient_init_seq_items[] = {
 /** Index to current element of _mqttclient_init_seq_items array. */
 static uint8_t _mqttclient_init_seq_items_index = 0;
 
-#if MQTTCLIENT_SEND_INITIAL_STATE
+#if MQTTCLIENT_PUBLISH_INITIAL_STATE
+/** Initial publish index. */
+static uint8_t _mqttclient_initial_publish_index = 0;
 
-/** Number of remaining PUBLISH messages. */
-static uint8_t _mqttclient_send_init_state_remaining = 0;
+/** Keep track if at least one initial publish happend. */
+static bool _mqttclient_initial_publish_blank = true;
 #endif
 
 /** Array of subscribe topics. Last element if NULL poiner. */
@@ -367,7 +369,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void);
 /**
  * Progress communication.
  */
-static void ICACHE_FLASH_ATTR _mqttclient_check_comm_progress(void);
+static void ICACHE_FLASH_ATTR _mqttclient_do_comm_progress(void);
 
 /**
  * Schedule reconnect attempt.
@@ -387,6 +389,13 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void);
   #if SENSOR_TYPE_ASYNCHRONOUS
 static void _mqttclient_async_callback(uint8_t topic_index);
   #endif
+#endif
+
+#if MQTTCLIENT_PUBLISH_INITIAL_STATE
+/**
+ * Publish initial data.
+ */
+static void _mqttclient_initial_publish(void);
 #endif
 
 /* Implementation. */
@@ -470,6 +479,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
 static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void) {
     _mqttclient_stop_mqtt_timers();
     _mqttclient_reset_comm_indexes();
+    _mqttclient_initial_publish_blank = true;
     commsig_connection_status(false);
 }
 
@@ -547,6 +557,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_subscribe(void) {
 static inline void _mqttclient_reset_comm_indexes(void) {
     _mqttclient_init_seq_items_index = 0;
     _mqttclient_subscribe_topics_index = 0;
+    _mqttclient_initial_publish_index = 0;
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
@@ -575,7 +586,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_send_callback(void *arg) {
     if (_publish_sending)
         _publish_sending = false;
     _mqttclient_update_comm_progress();
-    _mqttclient_check_comm_progress();
+    _mqttclient_do_comm_progress();
     _mqttclient_send();
 }
 
@@ -596,7 +607,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_received_callback(void *arg, char *pda
     }
 
     _mqttclient_update_comm_progress();
-    _mqttclient_check_comm_progress();
+    _mqttclient_do_comm_progress();
     _mqttclient_send();
 }
 
@@ -614,14 +625,17 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
             /* Check if all service topics has been published. */
             if (_mqttclient_init_seq_items_index == __mqttclient_init_seq_items_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED;
+//#if MQTTCLIENT_PUBLISH_INITIAL_STATE
+//                sensor_notify_lock();
+//#endif
             }
         }
 
-        /* Check if all service topics has been published. */
         if (_mqttclient_comm_state == MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED) {
-#if MQTTCLIENT_SEND_INITIAL_STATE
-
-            _mqttclient_comm_state = MQTTCLIENT_COMM_INIT_STATE_PUBLISHED;
+#if MQTTCLIENT_PUBLISH_INITIAL_STATE
+            if (_mqttclient_initial_publish_index == sensor_topics_count) {
+                _mqttclient_comm_state = MQTTCLIENT_COMM_INIT_STATE_PUBLISHED;
+            }
 #else
             /* Check if all topics has been subscribed. */
             if (_mqttclient_subscribe_topics_index == __mqttclient_subscribe_topics_count) {
@@ -630,28 +644,45 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
 #endif
         }
 
+#if MQTTCLIENT_PUBLISH_INITIAL_STATE
+        if (_mqttclient_comm_state == MQTTCLIENT_COMM_INIT_STATE_PUBLISHED) {
+            if (_mqttclient_subscribe_topics_index == __mqttclient_subscribe_topics_count) {
+                _mqttclient_comm_state = MQTTCLIENT_COMM_SUBSCRIBED;
+            }
+        }
+#endif
+
         /* Check if all topics has been subscribed. */
         if (_mqttclient_comm_state == MQTTCLIENT_COMM_SUBSCRIBED) {
 
             /* Enter operation state. */
             _mqttclient_comm_state = MQTTCLIENT_COMM_OPERATIONAL;
+#if ENABLE_DEVICE_CLASS_SENSOR && SENSOR_TYPE_ASYNCHRONOUS
+            sensor_notify_release();
+#endif
         }
     }
 }
 
-static void ICACHE_FLASH_ATTR _mqttclient_check_comm_progress(void) {
+static void ICACHE_FLASH_ATTR _mqttclient_do_comm_progress(void) {
     switch (_mqttclient_comm_state) {
         case MQTTCLIENT_COMM_CONNECTED:
             _mqttclient_send_init_sequence();
             break;
         case MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED:
-#if MQTTCLIENT_SEND_INITIAL_STATE
+#if MQTTCLIENT_PUBLISH_INITIAL_STATE
+            _mqttclient_initial_publish();
+            if (_mqttclient_initial_publish_blank) {
+                _mqttclient_update_comm_progress();
+                _mqttclient_do_comm_progress();
+            }
 #else
             _mqttclient_subscribe();
 #endif
             break;
-#if MQTTCLIENT_SEND_INITIAL_STATE
+#if MQTTCLIENT_PUBLISH_INITIAL_STATE
         case MQTTCLIENT_COMM_INIT_STATE_PUBLISHED:
+            _mqttclient_subscribe();
             break;
 #endif
         default:
@@ -715,3 +746,29 @@ static void ICACHE_FLASH_ATTR _mqttclient_on_publish(struct umqtt_connection *_m
     reactor_on_data(topic, data, len);
 #endif
 }
+
+#if MQTTCLIENT_PUBLISH_INITIAL_STATE
+static void _mqttclient_initial_publish(void) {
+    char *_topic_str;
+    char *_data_str;
+    uint8_t _data_len;
+    uint8_t _topic_len;
+
+    /* Get sensor data until some data are relevant. */
+    while (!sensor_get_initial_value(_mqttclient_initial_publish_index, &_data_str, &_data_len)) {
+        _mqttclient_initial_publish_index++;
+
+        /* Check if there are more topics. */
+        if (_mqttclient_initial_publish_index == sensor_topics_count) {
+            return;
+        }
+    }
+
+    /* We have relevant data. */
+    _mqttclient_initial_publish_blank = false;
+
+    _topic_str = sensor_get_topic(_mqttclient_initial_publish_index, &_topic_len);
+    umqtt_publish(&_mqttclient_mqtt, _topic_str, (uint8_t *) _data_str, _data_len, 0);
+    _mqttclient_initial_publish_index++;
+}
+#endif

@@ -31,8 +31,6 @@ extern char *reactor_subscribe_topics[];
 
 extern uint8_t reactor_subscribe_topics_count;
 
-//#define reactor_subscribe_topics_count ((sizeof(reactor_subscribe_topics) / sizeof(reactor_subscribe_topics[0])) - 1)
-
 /**
  * Initialize reactor hardware.
  */

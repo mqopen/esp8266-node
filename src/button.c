@@ -174,7 +174,7 @@ void button_init(void) {
     _button_init_state();
 
     ETS_GPIO_INTR_ATTACH(_button_interrupt_handler, NULL);
-    ETS_GPIO_INTR_ENABLE();
+    //ETS_GPIO_INTR_ENABLE();
 }
 
 uint8_t button_is_active(enum button_event_id id) {
@@ -206,6 +206,14 @@ uint8_t button_is_active(enum button_event_id id) {
             return 1;
     }
     return 0;
+}
+
+inline void button_notify_lock(void) {
+    ETS_GPIO_INTR_DISABLE();
+}
+
+inline void button_notify_release(void) {
+    ETS_GPIO_INTR_ENABLE();
 }
 
 static inline void _button_init_state(void) {
