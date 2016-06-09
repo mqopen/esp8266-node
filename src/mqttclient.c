@@ -71,14 +71,7 @@ static struct espconn _mqttclient_espconn = {
     .proto.tcp = &_mqttclient_tcp,
 };
 
-/**
- * Current link state
- */
-//static enum mqttclient_state _mqttclient_state = MQTTCLIENT_BROKER_DISCONNECTED;
-
-/**
- * Current communication stete
- */
+/** Current communication state. */
 static enum mqttclient_comm_state _mqttclient_comm_state = MQTTCLIENT_COMM_INIT;
 
 static uint8_t _mqttclient_tx_buffer[200];
@@ -222,11 +215,14 @@ static uint8_t _mqttclient_init_seq_items_index = 0;
 /** Initial publish index. */
 static uint8_t _mqttclient_initial_publish_index = 0;
 
-/** Keep track if at least one initial publish happend. */
+/**
+ * Keep track if at least one initial publish happend. This variable is set to
+ * false if at least one initial publish message has been sent.
+ */
 static bool _mqttclient_initial_publish_blank = true;
 #endif
 
-/** Array of subscribe topics. Last element if NULL poiner. */
+/** Array of subscribe topics. Last element is NULL poiner. */
 #if ENABLE_DEVICE_CLASS_REACTOR
   #define _mqttclient_subscribe_topics reactor_subscribe_topics
   #define __mqttclient_subscribe_topics_count reactor_subscribe_topics_count
@@ -329,11 +325,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_send_init_sequence(void);
  * Subscribe to configured MQTT topics
  */
 static void ICACHE_FLASH_ATTR _mqttclient_subscribe(void);
-
-/**
- * Reset all indexes to communication initialization data.
- */
-static inline void _mqttclient_reset_comm_indexes(void);
 
 /**
  * Send keep alive message to MQTT broker.
@@ -478,8 +469,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
 
 static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void) {
     _mqttclient_stop_mqtt_timers();
-    _mqttclient_reset_comm_indexes();
-    _mqttclient_initial_publish_blank = true;
     commsig_connection_status(false);
 }
 
@@ -554,12 +543,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_subscribe(void) {
     _mqttclient_subscribe_topics_index++;
 }
 
-static inline void _mqttclient_reset_comm_indexes(void) {
-    _mqttclient_init_seq_items_index = 0;
-    _mqttclient_subscribe_topics_index = 0;
-    _mqttclient_initial_publish_index = 0;
-}
-
 static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
     if (!_keep_alive_sending) {
         _keep_alive_sending = true;
@@ -581,10 +564,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_send(void) {
 
 static void ICACHE_FLASH_ATTR _mqttclient_send_callback(void *arg) {
     _message_sending = false;
-    if (_keep_alive_sending)
-        _keep_alive_sending = false;
-    if (_publish_sending)
-        _publish_sending = false;
+    _keep_alive_sending = false;
+    _publish_sending = false;
     _mqttclient_update_comm_progress();
     _mqttclient_do_comm_progress();
     _mqttclient_send();
@@ -625,6 +606,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
             /* Check if all service topics has been published. */
             if (_mqttclient_init_seq_items_index == __mqttclient_init_seq_items_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED;
+                _mqttclient_init_seq_items_index = 0;
 //#if MQTTCLIENT_PUBLISH_INITIAL_STATE
 //                sensor_notify_lock();
 //#endif
@@ -635,11 +617,13 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
 #if MQTTCLIENT_PUBLISH_INITIAL_STATE
             if (_mqttclient_initial_publish_index == sensor_topics_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_INIT_STATE_PUBLISHED;
+                _mqttclient_initial_publish_index = 0;
             }
 #else
             /* Check if all topics has been subscribed. */
             if (_mqttclient_subscribe_topics_index == __mqttclient_subscribe_topics_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_SUBSCRIBED;
+                _mqttclient_subscribe_topics_index = 0;
             }
 #endif
         }
@@ -648,6 +632,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
         if (_mqttclient_comm_state == MQTTCLIENT_COMM_INIT_STATE_PUBLISHED) {
             if (_mqttclient_subscribe_topics_index == __mqttclient_subscribe_topics_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_SUBSCRIBED;
+                _mqttclient_subscribe_topics_index = 0;
+                _mqttclient_initial_publish_blank = true;
             }
         }
 #endif
@@ -672,6 +658,12 @@ static void ICACHE_FLASH_ATTR _mqttclient_do_comm_progress(void) {
         case MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED:
 #if MQTTCLIENT_PUBLISH_INITIAL_STATE
             _mqttclient_initial_publish();
+
+            /*
+             * If nothing was published, functions _mqttclient_update_comm_progress
+             * and _mqttclient_do_comm_progress will not be called from callback
+             * handlers. So call them now.
+             */
             if (_mqttclient_initial_publish_blank) {
                 _mqttclient_update_comm_progress();
                 _mqttclient_do_comm_progress();
