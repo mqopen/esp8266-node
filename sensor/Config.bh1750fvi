@@ -1,0 +1,28 @@
+#
+# BH1750FVI sensor settings.
+#
+choice
+	prompt "BH1750FVI I2C address"
+	default SENSOR_BH1750FVI_I2C_ADDRESS_0X23
+	depends on SENSOR_BH1750FVI
+	help
+	  Configure sensor I2C address.
+
+config SENSOR_BH1750FVI_I2C_ADDRESS_0X23
+	bool "0x23"
+	help
+	  Use 0x23 I2C address.
+
+config SENSOR_BH1750FVI_I2C_ADDRESS_0X5C
+	bool "0x5c"
+	help
+	  Use 0x5c I2C address.
+
+endchoice
+
+config SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC
+	string "BMP180 Ambient light topic"
+	depends on SENSOR_BH1750FVI
+	default "alight"
+	help
+	  Sensor ambient light topic.

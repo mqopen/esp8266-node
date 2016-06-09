@@ -1,0 +1,43 @@
+#
+# Common DHT22 and DHT11 settings.
+#
+config SENSOR_DHT_TEMPERATURE
+	bool "Temperature"
+	depends on SENSOR_DHT22 || SENSOR_DHT11
+	default y
+	help
+	  Enable sensor temperature reading.
+
+if SENSOR_DHT_TEMPERATURE
+config SENSOR_DHT_TEMPERATURE_TOPIC
+	string "DHT Temperature topic"
+	depends on (SENSOR_DHT22 || SENSOR_DHT11) && SENSOR_DHT_TEMPERATURE
+	default "temperature"
+	help
+	  Sensor temperature topic.
+
+endif # SENSOR_DHT_TEMPERATURE
+
+config SENSOR_DHT_HUMIDITY
+	bool "Humidity"
+	depends on SENSOR_DHT22 || SENSOR_DHT11
+	default y
+	help
+	  Enable sensor humidity reading.
+
+if SENSOR_DHT_HUMIDITY
+config SENSOR_DHT_HUMIDITY_TOPIC
+	string "DHT Humidity topic"
+	depends on (SENSOR_DHT22 || SENSOR_DHT11) && SENSOR_DHT_HUMIDITY
+	default "humidity"
+	help
+	  Sensor humidity topic.
+
+endif # SENSOR_DHT_HUMIDITY
+
+config SENSOR_DHT_GPIO_DQ
+	int "DHT GPIO DQ pin number"
+	default 2
+	depends on SENSOR_DHT22 || SENSOR_DHT11
+	help
+	  Configure DHT sensor DQ pin.

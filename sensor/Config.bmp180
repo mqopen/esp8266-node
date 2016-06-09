@@ -1,0 +1,65 @@
+#
+# BMP180 sensor settings.
+#
+choice
+	prompt "BMP180 oversampling"
+	default SENSOR_BMP180_OVERSAMPLING_ULTRAHIGH
+	depends on SENSOR_BMP180
+	help
+	  Configure BMP180 oversampling setting.
+
+config SENSOR_BMP180_OVERSAMPLING_ULTRALOW
+	bool "Ultra low (single)"
+	help
+	  Single oversampling setting.
+
+config SENSOR_BMP180_OVERSAMPLING_STANDARD
+	bool "Standard (2 samples)"
+	help
+	  Standard oversampling setting.
+
+config SENSOR_BMP180_OVERSAMPLING_HIGH
+	bool "High (4 samples)"
+	help
+	  High oversampling setting.
+
+config SENSOR_BMP180_OVERSAMPLING_ULTRAHIGH
+	bool "Ultra high (8 samples)"
+	help
+	 Ultra high oversampling setting.
+
+endchoice
+
+config SENSOR_BMP180_TEMPERATURE
+	bool "Temperature"
+	depends on SENSOR_BMP180
+	default y
+	help
+	  Enable sensor temperature reading.
+
+if SENSOR_BMP180_TEMPERATURE
+config SENSOR_BMP180_TEMPERATURE_TOPIC
+	string "BMP180 Temperature topic"
+	depends on SENSOR_BMP180 && SENSOR_BMP180_TEMPERATURE
+	default "temperature"
+	help
+	  Sensor temperature topic.
+
+endif # SENSOR_BMP180_TEMPERATURE
+
+config SENSOR_BMP180_PRESSURE
+	bool "Pressure"
+	depends on SENSOR_BMP180
+	default y
+	help
+	  Enable sensor pressure reading.
+
+if SENSOR_BMP180_PRESSURE
+config SENSOR_BMP180_PRESSURE_TOPIC
+	string "BMP180 Pressure topic"
+	depends on SENSOR_BMP180 && SENSOR_BMP180_PRESSURE
+	default "pressure"
+	help
+	  Sensor pressure topic.
+
+endif # SENSOR_BMP180_PRESSURE
