@@ -50,16 +50,6 @@ enum mqttclient_comm_state {
 };
 
 /**
- * Initial PUBLISH item.
- */
-struct mqttclient_init_seq_item {
-    char *topic;
-    uint8_t *value;
-    uint16_t value_len;
-    uint8_t flags;
-};
-
-/**
  * Initialize MQTT client.
  */
 void ICACHE_FLASH_ATTR mqttclient_init(void);

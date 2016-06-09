@@ -32,6 +32,7 @@
 #endif
 #include "version.h"
 #include "common.h"
+#include "mqttclient_data.h"
 #include "mqttclient.h"
 
 /*
@@ -106,107 +107,6 @@ static struct umqtt_connect_config _connection_config = {
     .will_message_len = __sizeof_str(CONFIG_MQTT_PRESENCE_OFFLINE),
     .flags = _BV(UMQTT_OPT_RETAIN),
 };
-
-/** Array of initial sequence PUBLISH messages. Terminated with NULL element. */
-static struct mqttclient_init_seq_item _mqttclient_init_seq_items[] = {
-    {
-        .topic = __topic_presence,
-        .value = (uint8_t *) CONFIG_MQTT_PRESENCE_ONLINE,
-        .value_len = __sizeof_str(CONFIG_MQTT_PRESENCE_ONLINE),
-        .flags = _BV(UMQTT_OPT_RETAIN),
-    },
-    {
-        .topic = __topic_fwversion,
-        .value = (uint8_t *) VERSION,
-        .value_len = __sizeof_str(VERSION),
-        .flags = _BV(UMQTT_OPT_RETAIN),
-    },
-    {
-        .topic = __topic_hwversion,
-        .value = (uint8_t *) CONFIG_GENERAL_HW_VERSION,
-        .value_len = __sizeof_str(CONFIG_GENERAL_HW_VERSION),
-        .flags = _BV(UMQTT_OPT_RETAIN),
-    },
-    {
-        .topic = __topic_arch,
-        .value = (uint8_t *) "esp",
-        .value_len = __sizeof_str("esp"),
-        .flags = _BV(UMQTT_OPT_RETAIN),
-    },
-    {
-        .topic = __topic_variant,
-        .value = (uint8_t *) "esp8266",
-        .value_len = __sizeof_str("esp8266"),
-        .flags = _BV(UMQTT_OPT_RETAIN),
-    },
-    {
-        .topic = __topic_link,
-        .value = (uint8_t *) "wifi",
-        .value_len = __sizeof_str("wifi"),
-        .flags = _BV(UMQTT_OPT_RETAIN),
-    },
-    {
-        .topic = __topic_ip,
-        .value = (uint8_t *) CONFIG_NETWORK_IP_ADDRESS,
-        .value_len = __sizeof_str(CONFIG_NETWORK_IP_ADDRESS),
-        .flags = _BV(UMQTT_OPT_RETAIN),
-    },
-    {
-        .topic = __topic_class,
-#if ENABLE_DEVICE_CLASS_SENSOR
-        .value = (uint8_t *) "sensor",
-        .value_len = __sizeof_str("sensor"),
-#elif ENABLE_DEVICE_CLASS_REACTOR
-        .value = (uint8_t *) "reactor",
-        .value_len = __sizeof_str("reactor"),
-#else
-  #error Unsupported sensor class!
-#endif
-        .flags = _BV(UMQTT_OPT_RETAIN),
-    },
-
-#if ENABLE_DEVICE_CLASS_SENSOR
-    {
-        .topic = __topic_sensor,
-        .value = (uint8_t *) SENSOR_NAME,
-        .value_len = __sizeof_str(SENSOR_NAME),
-        .flags = _BV(UMQTT_OPT_RETAIN),
-    },
-#endif
-
-#if ENABLE_DEVICE_CLASS_REACTOR
-    {
-        .topic = __topic_reactor,
-        .value = (uint8_t *) REACTOR_NAME,
-        .value_len = __sizeof_str(REACTOR_NAME),
-        .flags = _BV(UMQTT_OPT_RETAIN),
-    },
-#endif
-
-#if ENABLE_DEVICE_CLASS_SENSOR
-    {
-        .topic = __topic_sync,
-  #if SENSOR_TYPE_SYNCHRONOUS
-        .value = (uint8_t *) "sync",
-        .value_len = __sizeof_str("sync"),
-  #else
-        .value = (uint8_t *) "async",
-        .value_len = __sizeof_str("async"),
-  #endif
-        .flags = _BV(UMQTT_OPT_RETAIN),
-    },
-#endif
-
-    /* NULL element. */
-    {
-        .topic = NULL,
-        .value = NULL,
-        .value_len = 0,
-        .flags = 0,
-    },
-};
-
-#define __mqttclient_init_seq_items_count ((sizeof(_mqttclient_init_seq_items) / sizeof(_mqttclient_init_seq_items[0])) - 1)
 
 /** Index to current element of _mqttclient_init_seq_items array. */
 static uint8_t _mqttclient_init_seq_items_index = 0;
@@ -468,6 +368,9 @@ static void ICACHE_FLASH_ATTR _mqttclient_create_connection(void) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void) {
+#if ENABLE_DEVICE_CLASS_SENSOR && SENSOR_TYPE_ASYNCHRONOUS
+            sensor_notify_lock();
+#endif
     _mqttclient_stop_mqtt_timers();
     commsig_connection_status(false);
 }
@@ -531,10 +434,10 @@ static void ICACHE_FLASH_ATTR _mqttclient_broker_connect(void) {
 static void ICACHE_FLASH_ATTR _mqttclient_send_init_sequence(void) {
     umqtt_publish(
         &_mqttclient_mqtt,
-        _mqttclient_init_seq_items[_mqttclient_init_seq_items_index].topic,
-        _mqttclient_init_seq_items[_mqttclient_init_seq_items_index].value,
-        _mqttclient_init_seq_items[_mqttclient_init_seq_items_index].value_len,
-        _mqttclient_init_seq_items[_mqttclient_init_seq_items_index].flags);
+        mqttclient_data_init_seq_items[_mqttclient_init_seq_items_index].topic,
+        mqttclient_data_init_seq_items[_mqttclient_init_seq_items_index].value,
+        mqttclient_data_init_seq_items[_mqttclient_init_seq_items_index].value_len,
+        mqttclient_data_init_seq_items[_mqttclient_init_seq_items_index].flags);
     _mqttclient_init_seq_items_index++;
 }
 
@@ -604,7 +507,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
         if (_mqttclient_comm_state == MQTTCLIENT_COMM_CONNECTED) {
 
             /* Check if all service topics has been published. */
-            if (_mqttclient_init_seq_items_index == __mqttclient_init_seq_items_count) {
+            if (_mqttclient_init_seq_items_index == mqttclient_data_init_seq_items_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED;
                 _mqttclient_init_seq_items_index = 0;
 //#if MQTTCLIENT_PUBLISH_INITIAL_STATE

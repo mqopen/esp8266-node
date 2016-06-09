@@ -1,8 +1,8 @@
 
 INSERT
 obj-y       :=
-obj-y       += gpio16.o main.o mqttclient.o network.o node.o uart.o \
-                umqtt.o bus.o datautils.o
+obj-y       += gpio16.o main.o mqttclient.o mqttclient_data.o network.o node.o \
+                uart.o umqtt.o bus.o datautils.o
 
 obj-$(CONFIG_DEVICE_CLASS_SENSOR)   += sensor.o
 obj-$(CONFIG_DEVICE_CLASS_REACTOR)  += reactor.o
