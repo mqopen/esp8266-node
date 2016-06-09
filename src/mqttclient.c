@@ -133,7 +133,6 @@ static char *_mqttclient_subscribe_topics[] = {
   #define __mqttclient_subscribe_topics_count ((sizeof(_mqttclient_subscribe_topics) / sizeof(_mqttclient_subscribe_topics[0])) - 1)
 #endif
 
-
 static uint8_t _mqttclient_subscribe_topics_index = 0;
 
 /** Keep track message send in progress. */
@@ -371,6 +370,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_stop_communication(void) {
 #if ENABLE_DEVICE_CLASS_SENSOR && SENSOR_TYPE_ASYNCHRONOUS
             sensor_notify_lock();
 #endif
+    umqtt_init(&_mqttclient_mqtt);
     _mqttclient_stop_mqtt_timers();
     commsig_connection_status(false);
 }
@@ -600,6 +600,7 @@ static void _mqttclient_async_callback(uint8_t topic_index) {
 
     if (!_publish_sending && _mqttclient_mqtt.state == UMQTT_STATE_CONNECTED) {
         _publish_sending = true;
+        os_printf("sending...\r\n");
 
         _topic = sensor_get_topic(topic_index, &_topic_len);
         _data = sensor_get_value(topic_index, &_data_len);
