@@ -32,14 +32,12 @@ static inline uint8_t _dht_dq_read(void);
 static inline void _dht_reset_dq(void);
 
 void dht_init(void) {
-    //ETS_GPIO_INTR_DISABLE() ;
     PIN_FUNC_SELECT(DHT_DQ_MUX, DHT_DQ_FUNC);
     GPIO_REG_WRITE(
         GPIO_PIN_ADDR(
             GPIO_ID_PIN(DHT_GPIO_DQ)),
             GPIO_REG_READ(GPIO_PIN_ADDR(GPIO_ID_PIN(DHT_GPIO_DQ))) | GPIO_PIN_PAD_DRIVER_SET(GPIO_PAD_DRIVER_ENABLE)); //open drain;
     GPIO_REG_WRITE(GPIO_ENABLE_ADDRESS, GPIO_REG_READ(GPIO_ENABLE_ADDRESS) | (1 << DHT_GPIO_DQ));
-    //ETS_GPIO_INTR_ENABLE() ;
     _dht_reset_dq();
 }
 
@@ -141,7 +139,6 @@ static inline void _dht_dq_output(void) {
 
 static inline void _dht_dq_input(void) {
     GPIO_DIS_OUTPUT(DHT_GPIO_DQ);
-    //PIN_PULLUP_EN(DHT_DQ_MUX);
 }
 
 static inline void _dht_dq_high(void) {
