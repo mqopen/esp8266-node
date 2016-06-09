@@ -26,10 +26,13 @@
 #include "sensor_button.h"
 #include "button.h"
 
+/**
+ * Buttin event types.
+ */
 enum _button_event {
-    _BUTTON_HIGH,
-    _BUTTON_LOW,
-    _BUTTON_CHANGE,
+    _BUTTON_HIGH,               /**< Rising edge event. */
+    _BUTTON_LOW,                /**< Falling edge event. */
+    _BUTTON_CHANGE,             /**< Logic change event. */
 };
 
 /**
@@ -122,6 +125,7 @@ static struct _button_pin _button_enabled_pins[] = {
 /** Helper marco to get enable button pins count. */
 #define _button_pins_count (sizeof(_button_enabled_pins) / sizeof(_button_enabled_pins[0]))
 
+/** Number of button reads to ensure that its level stabilizes. */
 #define _button_debounce_check_count 4
 
 /** Check period every 10 ms */
@@ -130,6 +134,7 @@ static struct _button_pin _button_enabled_pins[] = {
 /** Button debounce timer structure. */
 static os_timer_t _button_debounce_timer;
 
+/** Mask of unresolved button events. */
 static uint32_t _button_gpio_status = 0;
 
 /**
@@ -141,7 +146,7 @@ static uint32_t _button_gpio_status = 0;
 static void _button_interrupt_handler(uint32_t intr_mask, void *arg);
 
 /**
- * Initialize button state.
+ * Initialize button state. Called when initializing a hardware.
  */
 static inline void _button_init_state(void);
 
@@ -163,11 +168,17 @@ void button_init(void) {
 
 #if ENABLE_SENSOR_BUTTON_1
     PIN_FUNC_SELECT(BUTTON_1_MUX, BUTTON_1_FUNC);
+#if ENABLE_SENSOR_BUTTON_1_PULLUP
+    PIN_PULLUP_EN(BUTTON_1_MUX);
+#endif
     gpio_pin_intr_state_set(GPIO_ID_PIN(BUTTON_1_GPIO_PIN), GPIO_PIN_INTR_ANYEDGE);
 #endif
 
 #if ENABLE_SENSOR_BUTTON_2
     PIN_FUNC_SELECT(BUTTON_2_MUX, BUTTON_2_FUNC);
+#if ENABLE_SENSOR_BUTTON_2_PULLUP
+    PIN_PULLUP_EN(BUTTON_2_MUX);
+#endif
     gpio_pin_intr_state_set(GPIO_ID_PIN(BUTTON_2_GPIO_PIN), GPIO_PIN_INTR_ANYEDGE);
 #endif
 
@@ -218,9 +229,12 @@ inline void button_notify_release(void) {
 
 static inline void _button_init_state(void) {
     uint8_t i;
+    uint8_t _state;
     for (i = 0; i < _button_pins_count; i++) {
-        _button_enabled_pins[i].last_state = GPIO_INPUT_GET(GPIO_ID_PIN(_button_enabled_pins[i].pin));
+        _state = GPIO_INPUT_GET(GPIO_ID_PIN(_button_enabled_pins[i].pin));
+        _button_enabled_pins[i].last_state = _state;
         _button_enabled_pins[i].debounce_counter = 0;
+        _button_process_event(i, _state);
     }
 }
 
