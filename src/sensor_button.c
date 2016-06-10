@@ -127,7 +127,12 @@ void sensor_notify_release(void) {
 
 void sensor_button_notify(enum button_event_id id, uint8_t state) {
     uint8_t i = 0;
+
+/* This code will be used only if at least one button is configured as on change. */
+#if (ENABLE_SENSOR_BUTTON_1 && ENABLE_SENSOR_BUTTON_1_EVENTS_CHANGE) || \
+    (ENABLE_SENSOR_BUTTON_2 && ENABLE_SENSOR_BUTTON_2_EVENTS_CHANGE)
     uint8_t _len = 0;
+#endif
 
 #if ENABLE_SENSOR_BUTTON_1 && ENABLE_SENSOR_BUTTON_2
     /* Get data and topic index. */
