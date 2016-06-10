@@ -202,13 +202,13 @@ uint8_t button_is_active(enum button_event_id id) {
     _state = _button_enabled_pins[i].last_state;
     switch (_button_enabled_pins[i].event) {
         case _BUTTON_HIGH:
-            if (!_state) {
+            if (_state) {
                 return 1;
             } else {
                 break;
             }
         case _BUTTON_LOW:
-            if (_state) {
+            if (!_state) {
                 return 1;
             } else {
                 break;

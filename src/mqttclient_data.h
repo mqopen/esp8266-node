@@ -35,4 +35,8 @@ extern const struct mqttclient_data_init_seq_item mqttclient_data_init_seq_items
 
 extern const uint8_t mqttclient_data_init_seq_items_count;
 
+extern char *mqttclient_data_subscribe_topics[];
+
+extern const uint8_t mqttclient_data_subscribe_topics_count;
+
 #endif

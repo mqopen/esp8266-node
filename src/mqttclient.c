@@ -122,17 +122,6 @@ static uint8_t _mqttclient_initial_publish_index = 0;
 static bool _mqttclient_initial_publish_blank = true;
 #endif
 
-/** Array of subscribe topics. Last element is NULL poiner. */
-#if ENABLE_DEVICE_CLASS_REACTOR
-  #define _mqttclient_subscribe_topics reactor_subscribe_topics
-  #define __mqttclient_subscribe_topics_count reactor_subscribe_topics_count
-#else
-static char *_mqttclient_subscribe_topics[] = {
-    NULL,
-};
-  #define __mqttclient_subscribe_topics_count ((sizeof(_mqttclient_subscribe_topics) / sizeof(_mqttclient_subscribe_topics[0])) - 1)
-#endif
-
 static uint8_t _mqttclient_subscribe_topics_index = 0;
 
 /** Keep track message send in progress. */
@@ -442,7 +431,9 @@ static void ICACHE_FLASH_ATTR _mqttclient_send_init_sequence(void) {
 }
 
 static void ICACHE_FLASH_ATTR _mqttclient_subscribe(void) {
-    umqtt_subscribe(&_mqttclient_mqtt, _mqttclient_subscribe_topics[_mqttclient_subscribe_topics_index]);
+    umqtt_subscribe(
+        &_mqttclient_mqtt,
+        mqttclient_data_subscribe_topics[_mqttclient_subscribe_topics_index]);
     _mqttclient_subscribe_topics_index++;
 }
 
@@ -533,7 +524,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
 
 #if MQTTCLIENT_PUBLISH_INITIAL_STATE
         if (_mqttclient_comm_state == MQTTCLIENT_COMM_INIT_STATE_PUBLISHED) {
-            if (_mqttclient_subscribe_topics_index == __mqttclient_subscribe_topics_count) {
+            if (_mqttclient_subscribe_topics_index == mqttclient_data_subscribe_topics_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_SUBSCRIBED;
                 _mqttclient_subscribe_topics_index = 0;
                 _mqttclient_initial_publish_blank = true;
@@ -568,6 +559,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_do_comm_progress(void) {
              * handlers. So call them now.
              */
             if (_mqttclient_initial_publish_blank) {
+                os_printf("nothing to publish\r\n");
                 _mqttclient_update_comm_progress();
                 _mqttclient_do_comm_progress();
             }
@@ -600,7 +592,6 @@ static void _mqttclient_async_callback(uint8_t topic_index) {
 
     if (!_publish_sending && _mqttclient_mqtt.state == UMQTT_STATE_CONNECTED) {
         _publish_sending = true;
-        os_printf("sending...\r\n");
 
         _topic = sensor_get_topic(topic_index, &_topic_len);
         _data = sensor_get_value(topic_index, &_data_len);

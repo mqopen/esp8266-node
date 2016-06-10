@@ -120,9 +120,11 @@ void sensor_register_notify_callback(sensor_notify_callback_t callback) {
 }
 
 void sensor_notify_lock(void) {
+    button_notify_lock();
 }
 
 void sensor_notify_release(void) {
+    button_notify_release();
 }
 
 void sensor_button_notify(enum button_event_id id, uint8_t state) {
