@@ -26,14 +26,31 @@ const uint8_t sensor_topics_count = 1;
 
 static char _sensor_ds18b20_data_temperature_str[SENSOR_VALUE_BUFFER_SIZE];
 
-static struct sensor_str _sensor_ds18b20_topics = {
-    .data = TOPIC(CONFIG_SENSOR_DS18B20_TEMPERATURE_TOPIC),
-    .len = __sizeof_str(TOPIC(CONFIG_SENSOR_DS18B20_TEMPERATURE_TOPIC)),
+/**
+ * Topics
+ */
+static struct sensor_str _sensor_ds18b20_topics[] = {
+    {
+        .data = TOPIC(CONFIG_SENSOR_DS18B20_TEMPERATURE_TOPIC),
+        .len = __sizeof_str(TOPIC(CONFIG_SENSOR_DS18B20_TEMPERATURE_TOPIC)),
+    }
 };
 
-static struct sensor_str _sensor_ds18b20_data = {
-    .data = _sensor_ds18b20_data_temperature_str,
-    .len = 0,
+/**
+ * Data.
+ */
+static struct sensor_str _sensor_ds18b20_data[] = {
+    {
+        .data = _sensor_ds18b20_data_temperature_str,
+        .len = 0,
+    }
+};
+
+/**
+ * Flags.
+ */
+static uint8_t _sensor_ds18b20_flags[] = {
+    0,
 };
 
 enum sensor_io_result sensor_read(void) {
@@ -45,11 +62,11 @@ enum sensor_io_result sensor_read(void) {
         case DS18B20_IO_OK:
             _temperature += CONFIG_SENSOR_DS18B20_TEMPERATURE_OFFSET;
             _len = os_sprintf(
-                _sensor_ds18b20_data.data,
+                _sensor_ds18b20_data[0].data,
                 _temperature < 0 ? "-%d.%d" : "%d.%d",
                 abs(_temperature) / 10,
                 abs(_temperature) % 10);
-            _sensor_ds18b20_data.len = _len;
+            _sensor_ds18b20_data[0].len = _len;
             return SENSOR_IO_OK;
         case DS18B20_IO_ERROR:
         case DS18B20_IO_TEMP_CONVERSION_TIMEOUT:
@@ -57,10 +74,11 @@ enum sensor_io_result sensor_read(void) {
             break;
     }
 
-    os_memcpy(_sensor_ds18b20_data.data, _buf, _len);
-    _sensor_ds18b20_data.len = _len;
+    os_memcpy(_sensor_ds18b20_data[0].data, _buf, _len);
+    _sensor_ds18b20_data[0].len = _len;
     return SENSOR_IO_ERROR;
 }
 
-__sensor_get_topic_scalar(_sensor_ds18b20_topics)
-__sensor_get_value_scalar(_sensor_ds18b20_data)
+__sensor_get_topic(_sensor_ds18b20_topics);
+__sensor_get_value(_sensor_ds18b20_data);
+__sensor_get_flags(_sensor_ds18b20_flags);

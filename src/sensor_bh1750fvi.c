@@ -24,14 +24,22 @@
 
 static char _sensor_bh1750fvi_data_temperature_str[SENSOR_VALUE_BUFFER_SIZE];
 
-static struct sensor_str _sensor_bh1750fvi_topics = {
-    .data = TOPIC(CONFIG_SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC),
-    .len = __sizeof_str(TOPIC(CONFIG_SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC)),
+static struct sensor_str _sensor_bh1750fvi_topics[] = {
+    {
+        .data = TOPIC(CONFIG_SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC),
+        .len = __sizeof_str(TOPIC(CONFIG_SENSOR_BH1750FVI_AMBIENTLIGHT_TOPIC)),
+    },
 };
 
-static struct sensor_str _sensor_bh1750fvi_data = {
-    .data = _sensor_bh1750fvi_data_temperature_str,
-    .len = 0,
+static struct sensor_str _sensor_bh1750fvi_data[] = {
+    {
+        .data = _sensor_bh1750fvi_data_temperature_str,
+        .len = 0,
+    },
+};
+
+static uint8_t _sensor_bh1750fvi_flags[] = {
+    0,
 };
 
 const uint8_t sensor_topics_count = 1;
@@ -43,10 +51,10 @@ enum sensor_io_result sensor_read(void) {
     switch (_io_result) {
         case BH1750FVI_IO_OK:
             _len = os_sprintf(
-                _sensor_bh1750fvi_data.data,
+                _sensor_bh1750fvi_data[0].data,
                 "%d",
                 bh1750fvi_data);
-            _sensor_bh1750fvi_data.len = _len;
+            _sensor_bh1750fvi_data[0].len = _len;
             return SENSOR_IO_OK;
         case BH1750FVI_IO_WRITE_ADDRESS_ERROR:
             _len = os_sprintf(_buf, "E_WRITE_ADDRESS");
@@ -65,10 +73,11 @@ enum sensor_io_result sensor_read(void) {
             break;
     }
 
-    os_memcpy(_sensor_bh1750fvi_data.data, _buf, _len);
-    _sensor_bh1750fvi_data.len = _len;
+    os_memcpy(_sensor_bh1750fvi_data[0].data, _buf, _len);
+    _sensor_bh1750fvi_data[0].len = _len;
     return SENSOR_IO_ERROR;
 }
 
-__sensor_get_topic_scalar(_sensor_bh1750fvi_topics)
-__sensor_get_value_scalar(_sensor_bh1750fvi_data)
+__sensor_get_topic(_sensor_bh1750fvi_topics);
+__sensor_get_value(_sensor_bh1750fvi_data);
+__sensor_get_flags(_sensor_bh1750fvi_flags);

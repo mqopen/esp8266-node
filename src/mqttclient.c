@@ -515,7 +515,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
             }
 #else
             /* Check if all topics has been subscribed. */
-            if (_mqttclient_subscribe_topics_index == __mqttclient_subscribe_topics_count) {
+            if (_mqttclient_subscribe_topics_index == mqttclient_data_subscribe_topics_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_SUBSCRIBED;
                 _mqttclient_subscribe_topics_index = 0;
             }
@@ -587,6 +587,7 @@ static inline void _mqttclient_schedule_reconnect(void) {
 static void _mqttclient_async_callback(uint8_t topic_index) {
     uint8_t _topic_len;
     uint8_t _data_len;
+    uint8_t _flags;
     char *_topic;
     char *_data;
 
@@ -595,7 +596,8 @@ static void _mqttclient_async_callback(uint8_t topic_index) {
 
         _topic = sensor_get_topic(topic_index, &_topic_len);
         _data = sensor_get_value(topic_index, &_data_len);
-        umqtt_publish(&_mqttclient_mqtt, _topic, (uint8_t *) _data, _data_len, 0);
+        _flags = sensor_get_flags(topic_index);
+        umqtt_publish(&_mqttclient_mqtt, _topic, (uint8_t *) _data, _data_len, _flags);
 
         _mqttclient_send();
     }
@@ -609,6 +611,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
     uint8_t _i;
     uint8_t _topic_len;
     uint8_t _data_len;
+    uint8_t _flags;
     char *_topic;
     char *_data;
 
@@ -619,7 +622,8 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
         for (_i = 0; _i < sensor_topics_count; _i++) {
             _topic = sensor_get_topic(_i, &_topic_len);
             _data = sensor_get_value(_i, &_data_len);
-            umqtt_publish(&_mqttclient_mqtt, _topic, (uint8_t *) _data, _data_len, 0);
+            _flags = sensor_get_flags(_i);
+            umqtt_publish(&_mqttclient_mqtt, _topic, (uint8_t *) _data, _data_len, _flags);
         }
 
         _mqttclient_send();
@@ -636,13 +640,14 @@ static void ICACHE_FLASH_ATTR _mqttclient_on_publish(struct umqtt_connection *_m
 
 #if MQTTCLIENT_PUBLISH_INITIAL_STATE
 static void _mqttclient_initial_publish(void) {
-    char *_topic_str;
-    char *_data_str;
+    char *_topic;
+    char *_data;
     uint8_t _data_len;
     uint8_t _topic_len;
+    uint8_t _flags;
 
     /* Get sensor data until some data are relevant. */
-    while (!sensor_get_initial_value(_mqttclient_initial_publish_index, &_data_str, &_data_len)) {
+    while (!sensor_get_initial_value(_mqttclient_initial_publish_index, &_data, &_data_len)) {
         _mqttclient_initial_publish_index++;
 
         /* Check if there are more topics. */
@@ -654,8 +659,9 @@ static void _mqttclient_initial_publish(void) {
     /* We have relevant data. */
     _mqttclient_initial_publish_blank = false;
 
-    _topic_str = sensor_get_topic(_mqttclient_initial_publish_index, &_topic_len);
-    umqtt_publish(&_mqttclient_mqtt, _topic_str, (uint8_t *) _data_str, _data_len, 0);
+    _topic = sensor_get_topic(_mqttclient_initial_publish_index, &_topic_len);
+    _flags = sensor_get_flags(_mqttclient_initial_publish_index);
+    umqtt_publish(&_mqttclient_mqtt, _topic, (uint8_t *) _data, _data_len, _flags);
     _mqttclient_initial_publish_index++;
 }
 #endif

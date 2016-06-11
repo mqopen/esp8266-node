@@ -84,6 +84,17 @@ static struct sensor_str _sensor_bmp180_data[] = {
 #endif
 };
 
+/**
+ * Flags.
+ */
+static uint8_t _sensor_bmp180_flags[] = {
+#if ENABLE_SENSOR_BMP180_TEMPERATURE
+    0,
+#endif
+#if CONFIG_SENSOR_BMP180_PRESSURE
+    0,
+#endif
+};
 
 const uint8_t sensor_topics_count = sizeof(_sensor_bmp180_topics) / sizeof(_sensor_bmp180_topics[0]);
 
@@ -133,5 +144,6 @@ enum sensor_io_result sensor_read(void) {
     return SENSOR_IO_ERROR;
 }
 
-__sensor_get_topic_array(_sensor_bmp180_topics)
-__sensor_get_value_array(_sensor_bmp180_data)
+__sensor_get_topic(_sensor_bmp180_topics);
+__sensor_get_value(_sensor_bmp180_data);
+__sensor_get_flags(_sensor_bmp180_flags);

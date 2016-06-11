@@ -18,6 +18,7 @@
 #include <c_types.h>
 #include <osapi.h>
 #include "common.h"
+#include "umqtt.h"
 #include "sensor.h"
 #include "sensor_button.h"
 
@@ -93,6 +94,26 @@ static struct sensor_str _sensor_button_data[] = {
     #error Unsupported button 2 events config!
   #endif
     },
+#endif
+};
+
+/**
+ * Flags.
+ */
+static uint8_t sensor_button_flags[] = {
+#if ENABLE_SENSOR_BUTTON_1
+  #if ENABLE_SENSOR_BUTTON_1_EVENTS_CHANGE
+    _BV(UMQTT_OPT_RETAIN),
+  #else
+    0,
+  #endif
+#endif
+#if ENABLE_SENSOR_BUTTON_2
+  #if ENABLE_SENSOR_BUTTON_2_EVENTS_CHANGE
+    _BV(UMQTT_OPT_RETAIN),
+  #else
+    0,
+  #endif
 #endif
 };
 
@@ -207,5 +228,6 @@ void sensor_button_notify(enum button_event_id id, uint8_t state) {
     }
 }
 
-__sensor_get_topic_array(_sensor_button_topics)
-__sensor_get_value_array(_sensor_button_data)
+__sensor_get_topic(_sensor_button_topics);
+__sensor_get_value(_sensor_button_data);
+__sensor_get_flags(sensor_button_flags);

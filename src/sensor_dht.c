@@ -77,6 +77,18 @@ static struct sensor_str _sensor_dht_data[] = {
 #endif
 };
 
+/**
+ * Flags.
+ */
+static uint8_t _sensor_dht_flags[] = {
+#if ENABLE_SENSOR_DHT_TEMPERATURE
+    0,
+#endif
+#if ENABLE_SENSOR_DHT_HUMIDITY
+    0,
+#endif
+};
+
 const uint8_t sensor_topics_count = sizeof(_sensor_dht_topics) / sizeof(_sensor_dht_topics[0]);
 
 enum sensor_io_result sensor_read(void) {
@@ -130,5 +142,6 @@ enum sensor_io_result sensor_read(void) {
     return SENSOR_IO_ERROR;
 }
 
-__sensor_get_topic_array(_sensor_dht_topics)
-__sensor_get_value_array(_sensor_dht_data)
+__sensor_get_topic(_sensor_dht_topics);
+__sensor_get_value(_sensor_dht_data);
+__sensor_get_flags(_sensor_dht_flags);
