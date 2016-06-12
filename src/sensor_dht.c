@@ -24,7 +24,7 @@
 
 /* Check that at least one sensor reading is enabled. */
 #if ! ENABLE_SENSOR_DHT_TEMPERATURE && ! ENABLE_SENSOR_DHT_HUMIDITY
-#error No sensor reading is enabled.
+  #error No sensor reading is enabled.
 #endif
 
 /**

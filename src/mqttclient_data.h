@@ -33,10 +33,13 @@ struct mqttclient_data_init_seq_item {
 /** Array of initial sequence PUBLISH messages. Terminated with NULL element. */
 extern const struct mqttclient_data_init_seq_item mqttclient_data_init_seq_items[];
 
+/** Number of initial sequence PUBLISH messages. */
 extern const uint8_t mqttclient_data_init_seq_items_count;
 
+/** Array of device sunscribe topics. */
 extern char *mqttclient_data_subscribe_topics[];
 
+/** Number of device subscribe topics. */
 extern const uint8_t mqttclient_data_subscribe_topics_count;
 
 #endif
