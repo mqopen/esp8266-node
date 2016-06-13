@@ -28,6 +28,6 @@
  * @param len Length of data buffer.
  * @return Non-zero on success, zero on failure.
  */
-uint8_t datautils_data_to_int32(int32_t *val, uint8_t *buf, uint16_t len);
+uint8_t datautils_data_to_int32(int32_t *val, const uint8_t *buf, uint16_t len);
 
 #endif

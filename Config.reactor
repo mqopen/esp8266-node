@@ -19,18 +19,23 @@ config REACTOR_PINSTATE_TOPIC
 	help
 	  Pinstate subscribe MQTT topic.
 
+config REACTOR_PINSTATE_LOGIC
+	bool "Normally high"
+	default n
+	help
+	  Configure pinstate logic.
+
+	  Check this option when GPIO pin should be normally high. Uncheck
+	  for normally low.
+
+	  When device is turnded on, GPIO state will be set accordingly
+	  to this option.
+
 choice
 	prompt "MQTT data input"
 	default REACTOR_PINSTATE_INPUT_NUMERIC
 	help
 	  Choose expected data type.
-
-config REACTOR_PINSTATE_LOGIC
-	bool "Normally high"
-	default n
-	help
-	  Check this option when GPIO pin should be normally high. Uncheck
-	  for normally low.
 
 config REACTOR_PINSTATE_INPUT_NUMERIC
 	bool "Numeric"
@@ -43,6 +48,33 @@ config REACTOR_PINSTATE_INPUT_KEYWORD
 	help
 	  Keyword input. Device will react on defined keywords only. All other
 	  MQTT payloads will be ignored.
+
+endchoice
+
+choice
+	prompt "Criteria"
+	depends on REACTOR_PINSTATE_INPUT_NUMERIC
+	default REACTOR_PINSTATE_CRITERIA_LT
+	help
+	  Configures pinstate criteria.
+
+config REACTOR_PINSTATE_CRITERIA_LT
+	bool "Lesser than"
+	help
+	  Criteria is met when received value is lesser than configured
+	  treshold.
+
+config REACTOR_PINSTATE_CRITERIA_GT
+	bool "Greater than"
+	help
+	  Criteria is met when received value is greater than configured
+	  treshold.
+
+config REACTOR_PINSTATE_CRITERIA_EQ
+	bool "Equals"
+	help
+	  Criteria is met when received value is equals to configured
+	  treshold.
 
 endchoice
 

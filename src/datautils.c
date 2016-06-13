@@ -18,7 +18,7 @@
 #include <c_types.h>
 #include "datautils.h"
 
-uint8_t datautils_data_to_int32(int32_t *val, uint8_t *buf, uint16_t len) {
+uint8_t datautils_data_to_int32(int32_t *val, const uint8_t *buf, uint16_t len) {
     int32_t _val = 0;
     uint16_t _i = 0;
     int8_t _digit;

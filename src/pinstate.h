@@ -20,8 +20,23 @@
 
 #include <c_types.h>
 
+/**
+ * Initialize pinstate hardware.
+ */
 void pinstate_init(void);
 
-void pinstate_update(int32_t value);
+/**
+ * Set state.
+ *
+ * @param enable True when pinstate configured condition is met, False otherwise.
+ */
+void pinstate_set(bool enable);
+
+/**
+ * Get Current pinstate state.
+ *
+ * @return True if pinstate if condition is currently met, False otherwise.
+ */
+inline bool pinstate_get(void);
 
 #endif

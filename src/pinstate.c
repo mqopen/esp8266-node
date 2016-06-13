@@ -20,29 +20,63 @@
 #include <eagle_soc.h>
 #include "pinstate.h"
 
-#define PINSTATE_PIN        14
-#define PINSTATE_MUX        PERIPHS_IO_MUX_MTMS_U
-#define PINSTATE_FUNC       FUNC_GPIO14
+#include <osapi.h>
 
-static _pinstate_state;
+/**
+ * Pinstate GPIO pin.
+ */
+#define PINSTATE_PIN_GPIO CONFIG_REACTOR_PINSTATE_GPIO_PIN
+#if CONFIG_REACTOR_PINSTATE_GPIO_PIN == 0
+  #define PINSTATE_PIN_MUX PERIPHS_IO_MUX_GPIO0_U
+  #define PINSTATE_PIN_FUNC FUNC_GPIO0
+#elif CONFIG_REACTOR_PINSTATE_GPIO_PIN == 2
+  #define PINSTATE_PIN_MUX PERIPHS_IO_MUX_GPIO2_U
+  #define PINSTATE_PIN_FUNC FUNC_GPIO2
+#elif CONFIG_REACTOR_PINSTATE_GPIO_PIN == 13
+  #define PINSTATE_PIN_MUX PERIPHS_IO_MUX_MTCK_U
+  #define PINSTATE_PIN_FUNC FUNC_GPIO13
+#elif CONFIG_REACTOR_PINSTATE_GPIO_PIN == 14
+  #define PINSTATE_PIN_MUX PERIPHS_IO_MUX_MTMS_U
+  #define PINSTATE_PIN_FUNC FUNC_GPIO14
+#else
+  #error Unsupported pinstate pin number!
+#endif
 
-void _pinstate_set(bool state);
+/* Logic inversion */
+#if ENABLE_REACTOR_PINSTATE_LOGIC
+  #define PINSTATE_INVERT !
+#else
+  #define PINSTATE_INVERT
+#endif
 
-bool _pinstate_get(void);
+static bool _pinstate_is_enabled = false;
+
+/* Static functions prototypes. */
+inline void _pinstate_high(void);
+inline void _pinstate_low(void);
 
 void pinstate_init(void) {
-    _pinstate_state = false;
-    PIN_FUNC_SELECT(PINSTATE_MUX, PINSTATE_FUNC);
-    gpio_output_set(0, 1 << PINSTATE_PIN, 1 << PINSTATE_PIN, 0);
+    PIN_FUNC_SELECT(PINSTATE_PIN_MUX, PINSTATE_PIN_FUNC);
+    pinstate_set(false);
 }
 
-void pinstate_update(int32_t value) {
+void pinstate_set(bool enable) {
+    if (PINSTATE_INVERT enable) {
+        _pinstate_high();
+    } else {
+        _pinstate_low();
+    }
+    _pinstate_is_enabled = enable;
 }
 
-void _pinstate_set(bool state) {
-    _pinstate_state = state;
+inline bool pinstate_get(void) {
+    return _pinstate_is_enabled;
 }
 
-bool _pinstate_get(void) {
-    return _pinstate_state;
+inline void _pinstate_high(void) {
+    gpio_output_set(1 << PINSTATE_PIN_GPIO, 0, 1 << PINSTATE_PIN_GPIO, 0);
+}
+
+inline void _pinstate_low(void) {
+    gpio_output_set(0, 1 << PINSTATE_PIN_GPIO, 1 << PINSTATE_PIN_GPIO, 0);
 }

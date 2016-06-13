@@ -39,7 +39,7 @@ extern void reactor_init(void);
 /**
  * Notify reactor about MQTT data
  */
-extern void reactor_on_data(char *topic, uint8_t *data, uint16_t data_len);
+extern void reactor_on_data(const char *topic, const uint8_t *data, uint16_t data_len);
 
 #define __reactor_subscribe_topics_count() \
     const uint8_t reactor_subscribe_topics_count = (sizeof(reactor_subscribe_topics) / sizeof(reactor_subscribe_topics[0]));
