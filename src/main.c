@@ -25,6 +25,9 @@
 #if ENABLE_DEVICE_CLASS_SENSOR
   #include "sensor.h"
 #endif
+#if ENABLE_DEVICE_CLASS_REACTOR
+    #include "reactor.h"
+#endif
 #include "network.h"
 #include "mqttclient.h"
 #include "commsig.h"
@@ -39,6 +42,9 @@ void ICACHE_FLASH_ATTR user_init(void) {
     bus_init();
 #if ENABLE_DEVICE_CLASS_SENSOR
     sensor_init();
+#endif
+#if ENABLE_DEVICE_CLASS_REACTOR
+    reactor_init();
 #endif
     mqttclient_init();
     commsig_init();

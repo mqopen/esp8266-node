@@ -56,7 +56,9 @@ inline void _pinstate_high(void);
 inline void _pinstate_low(void);
 
 void pinstate_init(void) {
+    gpio_init();
     PIN_FUNC_SELECT(PINSTATE_PIN_MUX, PINSTATE_PIN_FUNC);
+    PIN_PULLUP_DIS(PINSTATE_PIN_MUX);
     pinstate_set(false);
 }
 
