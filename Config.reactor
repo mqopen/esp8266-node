@@ -51,6 +51,14 @@ config REACTOR_PINSTATE_INPUT_KEYWORD
 
 endchoice
 
+config REACTOR_PINSTATE_INPUT_DECIMAL
+	int "Number of decimal digits"
+	depends on REACTOR_PINSTATE_INPUT_NUMERIC
+	default 0
+	help
+	  Configure maximum of decimal digits. Zero for integers. Greater than
+	  zero for decimals. Lesser than zero is not allowed.
+
 choice
 	prompt "Criteria"
 	depends on REACTOR_PINSTATE_INPUT_NUMERIC

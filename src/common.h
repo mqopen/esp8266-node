@@ -23,6 +23,7 @@
 #define _BV(b)      (1<<(b))
 #define abs(x)      ((x)<0?(-x):(x))
 #define max(x, y)   ((x)<(y)?(y):(x))
+#define min(x, y)   ((x)>(y)?(y):(x))
 
 #define _STR(x) #x
 #define STR(x) _STR(x)

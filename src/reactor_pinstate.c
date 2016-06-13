@@ -35,6 +35,11 @@
   #endif
 #endif
 
+/* Check for number of decimal digits. */
+#if CONFIG_REACTOR_PINSTATE_INPUT_DECIMAL < 0
+  #error Negative decimal configuration is not allowed!
+#endif
+
 __reactor_subscribe_topics(
     CONFIG_REACTOR_PINSTATE_TOPIC
 );
@@ -52,7 +57,7 @@ void reactor_on_data(const char *topic, const uint8_t *data, uint16_t data_len) 
 #if ENABLE_REACTOR_PINSTATE_INPUT_NUMERIC
     int32_t value;
     bool _is_criteria_met;
-    if (!datautils_data_to_int32(&value, data, data_len)) {
+    if (!datautils_data_to_int32(&value, data, data_len, CONFIG_REACTOR_PINSTATE_INPUT_DECIMAL)) {
         _is_criteria_met = value REACTOR_PINSTATE_CMP_OP CONFIG_REACTOR_PINSTATE_TRESHOLD ? true : false;
         if (_is_criteria_met != pinstate_get()) {
             pinstate_set(_is_criteria_met);

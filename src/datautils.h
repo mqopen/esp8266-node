@@ -26,8 +26,9 @@
  * @param val Pointer to memory where final value will be stored.
  * @param buf Pointer to data buffer.
  * @param len Length of data buffer.
+ * @param decimal_digits Nuber of decimal digits.
  * @return Non-zero on success, zero on failure.
  */
-uint8_t datautils_data_to_int32(int32_t *val, const uint8_t *buf, uint16_t len);
+uint8_t datautils_data_to_int32(int32_t *val, const uint8_t *buf, uint16_t len, uint8_t decimal_digits);
 
 #endif
