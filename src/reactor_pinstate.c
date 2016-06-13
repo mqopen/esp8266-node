@@ -24,16 +24,11 @@
 
 __reactor_subscribe_topics(
     CONFIG_REACTOR_PINSTATE_TOPIC
-)
+);
 
 extern void reactor_on_data(char *topic, uint8_t *data, uint16_t data_len) {
     int32_t value;
-    if (os_memcmp(
-            CONFIG_REACTOR_PINSTATE_TOPIC,
-            topic,
-            __sizeof_str(CONFIG_REACTOR_PINSTATE_TOPIC)) == 0) {
-        if (!datautils_data_to_int32(&value, data, data_len)) {
-            pinstate_update(value);
-        }
+    if (!datautils_data_to_int32(&value, data, data_len)) {
+        pinstate_update(value);
     }
 }

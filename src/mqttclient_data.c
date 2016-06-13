@@ -131,15 +131,14 @@ const struct mqttclient_data_init_seq_item mqttclient_data_init_seq_items[] = {
 const uint8_t mqttclient_data_init_seq_items_count = __mqttclient_data_init_seq_items_count;
 
 /** Array of subscribe topics. Last element is NULL poiner. */
-#if ENABLE_DEVICE_CLASS_REACTOR
-  #define mqttclient_data_subscribe_topics reactor_subscribe_topics
-  #define __mqttclient_data_subscribe_topics_count reactor_subscribe_topics_count
-#else
-char *mqttclient_data_subscribe_topics[] = {
+#if ENABLE_DEVICE_CLASS_SENSOR
+const char *mqttclient_data_subscribe_topics[] = {
     NULL,
 };
+
   #define __mqttclient_data_subscribe_topics_count \
     ((sizeof(mqttclient_data_subscribe_topics) / sizeof(mqttclient_data_subscribe_topics[0])) - 1)
-#endif
 
 const uint8_t mqttclient_data_subscribe_topics_count = __mqttclient_data_subscribe_topics_count;
+
+#endif

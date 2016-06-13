@@ -27,9 +27,9 @@
   #error Unsupported reactor type!
 #endif
 
-extern char *reactor_subscribe_topics[];
+extern const char *reactor_subscribe_topics[];
 
-extern uint8_t reactor_subscribe_topics_count;
+extern const uint8_t reactor_subscribe_topics_count;
 
 /**
  * Initialize reactor hardware.
@@ -42,10 +42,10 @@ extern void reactor_init(void);
 extern void reactor_on_data(char *topic, uint8_t *data, uint16_t data_len);
 
 #define __reactor_subscribe_topics_count() \
-    uint8_t reactor_subscribe_topics_count = (sizeof(reactor_subscribe_topics) / sizeof(reactor_subscribe_topics[0]));
+    const uint8_t reactor_subscribe_topics_count = (sizeof(reactor_subscribe_topics) / sizeof(reactor_subscribe_topics[0]));
 
 #define __reactor_subscribe_topics(...) \
-    char *reactor_subscribe_topics[] = { \
+    const char *reactor_subscribe_topics[] = { \
         __VA_ARGS__ \
     }; \
     __reactor_subscribe_topics_count()

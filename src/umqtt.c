@@ -57,7 +57,7 @@ void umqtt_circ_init(struct umqtt_circ_buffer *buff) {
     buff->datalen = 0;
 }
 
-int16_t umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len) {
+int16_t umqtt_circ_push(struct umqtt_circ_buffer *buff, const uint8_t *data, int16_t len) {
     uint8_t *bend = buff->start + buff->length - 1;
     /* This points to new byte */
     uint8_t *dend = (buff->pointer - buff->start + buff->datalen) % buff->length + buff->start;
@@ -168,7 +168,7 @@ void umqtt_connect(struct umqtt_connection *conn, struct umqtt_connect_config *c
     conn->state = UMQTT_STATE_CONNECTING;
 }
 
-void umqtt_subscribe(struct umqtt_connection *conn, char *topic) {
+void umqtt_subscribe(struct umqtt_connection *conn, const char *topic) {
     uint16_t topiclen = strlen(topic);
     uint8_t fixed = _umqtt_build_header(UMQTT_SUBSCRIBE, 0, 1, 0);
     uint8_t remlen[4];
@@ -188,7 +188,7 @@ void umqtt_subscribe(struct umqtt_connection *conn, char *topic) {
     conn->nack_subscribe++;
 }
 
-void umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, uint16_t datalen, uint8_t flags) {
+void umqtt_publish(struct umqtt_connection *conn, const char *topic, const uint8_t *data, uint16_t datalen, uint8_t flags) {
     uint16_t toplen = strlen(topic);
     uint8_t retain = flags & _BV(UMQTT_OPT_RETAIN) ? 1 : 0;
     uint8_t fixed = _umqtt_build_header(UMQTT_PUBLISH, 0, 0, retain);

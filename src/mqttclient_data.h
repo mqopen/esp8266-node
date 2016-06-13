@@ -19,6 +19,9 @@
 #define __MQTTCLIENT_DATA_H__
 
 #include <c_types.h>
+#if ENABLE_DEVICE_CLASS_REACTOR
+  #include "reactor.h"
+#endif
 
 /**
  * Initial PUBLISH item.
@@ -36,10 +39,15 @@ extern const struct mqttclient_data_init_seq_item mqttclient_data_init_seq_items
 /** Number of initial sequence PUBLISH messages. */
 extern const uint8_t mqttclient_data_init_seq_items_count;
 
-/** Array of device sunscribe topics. */
-extern char *mqttclient_data_subscribe_topics[];
+#if ENABLE_DEVICE_CLASS_REACTOR
+  #define mqttclient_data_subscribe_topics          reactor_subscribe_topics
+  #define mqttclient_data_subscribe_topics_count    reactor_subscribe_topics_count
+#else
+/** Array of device subscribe topics. */
+extern const char *mqttclient_data_subscribe_topics[];
 
 /** Number of device subscribe topics. */
 extern const uint8_t mqttclient_data_subscribe_topics_count;
+#endif
 
 #endif

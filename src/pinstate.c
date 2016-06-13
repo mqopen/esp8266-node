@@ -16,7 +16,13 @@
  */
 
 #include <c_types.h>
+#include <gpio.h>
+#include <eagle_soc.h>
 #include "pinstate.h"
+
+#define PINSTATE_PIN        14
+#define PINSTATE_MUX        PERIPHS_IO_MUX_MTMS_U
+#define PINSTATE_FUNC       FUNC_GPIO14
 
 static _pinstate_state;
 
@@ -26,6 +32,8 @@ bool _pinstate_get(void);
 
 void pinstate_init(void) {
     _pinstate_state = false;
+    PIN_FUNC_SELECT(PINSTATE_MUX, PINSTATE_FUNC);
+    gpio_output_set(0, 1 << PINSTATE_PIN, 1 << PINSTATE_PIN, 0);
 }
 
 void pinstate_update(int32_t value) {

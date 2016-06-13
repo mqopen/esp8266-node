@@ -120,7 +120,7 @@ struct umqtt_connect_config {
 void umqtt_circ_init(struct umqtt_circ_buffer *buff);
 
 /* Return the amount of bytes left */
-int16_t umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len);
+int16_t umqtt_circ_push(struct umqtt_circ_buffer *buff, const uint8_t *data, int16_t len);
 
 /* Returns amount of bytes popped/peeked */
 int16_t umqtt_circ_pop(struct umqtt_circ_buffer *buff, uint8_t *data, int16_t len);
@@ -147,7 +147,7 @@ void umqtt_connect(struct umqtt_connection *conn, struct umqtt_connect_config *c
  * @param conn Connection object.
  * @param topic Topic name.
  */
-void umqtt_subscribe(struct umqtt_connection *conn, char *topic);
+void umqtt_subscribe(struct umqtt_connection *conn, const char *topic);
 
 /**
  * Publish MQTT message.
@@ -157,7 +157,7 @@ void umqtt_subscribe(struct umqtt_connection *conn, char *topic);
  * @param data Message payload.
  * @param datalen Message payload length.
  */
-void umqtt_publish(struct umqtt_connection *conn, char *topic, uint8_t *data, uint16_t datalen, uint8_t flags);
+void umqtt_publish(struct umqtt_connection *conn, const char *topic, const uint8_t *data, uint16_t datalen, uint8_t flags);
 
 /**
  * Send PINGREQ message to MQTT broker.
