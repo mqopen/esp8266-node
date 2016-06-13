@@ -19,4 +19,59 @@ config REACTOR_PINSTATE_TOPIC
 	help
 	  Pinstate subscribe MQTT topic.
 
+choice
+	prompt "MQTT data input"
+	default REACTOR_PINSTATE_INPUT_NUMERIC
+	help
+	  Choose expected data type.
+
+config REACTOR_PINSTATE_LOGIC
+	bool "Normally high"
+	default n
+	help
+	  Check this option when GPIO pin should be normally high. Uncheck
+	  for normally low.
+
+config REACTOR_PINSTATE_INPUT_NUMERIC
+	bool "Numeric"
+	help
+	  Numeric data input. Each subscribed MQTT payload will be converted
+	  into integer number. Non-convertable payloads will be ignored.
+
+config REACTOR_PINSTATE_INPUT_KEYWORD
+	bool "Keyword"
+	help
+	  Keyword input. Device will react on defined keywords only. All other
+	  MQTT payloads will be ignored.
+
+endchoice
+
+config REACTOR_PINSTATE_TRESHOLD
+	int "Treshold value"
+	depends on REACTOR_PINSTATE_INPUT_NUMERIC
+	default 1
+	help
+	  Configure treshold value.
+
+config REACTOR_PINSTATE_KEYWORD_ENABLE
+	string "Enable keyword"
+	depends on REACTOR_PINSTATE_INPUT_KEYWORD
+	default "high"
+	help
+	  Configure enable keyword.
+
+config REACTOR_PINSTATE_KEYWORD_DISABLE
+	string "Disable keyword"
+	depends on REACTOR_PINSTATE_INPUT_KEYWORD
+	default "low"
+	help
+	  Configure disable keyword.
+
+config REACTOR_PINSTATE_GPIO_PIN
+	int "GPIO pin number"
+	depends on REACTOR_PINSTATE
+	default 14
+	help
+	  Define GPIO in number which should be changed on data event.
+
 endmenu
