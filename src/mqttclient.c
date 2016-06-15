@@ -559,7 +559,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_do_comm_progress(void) {
              * handlers. So call them now.
              */
             if (_mqttclient_initial_publish_blank) {
-                os_printf("nothing to publish\r\n");
                 _mqttclient_update_comm_progress();
                 _mqttclient_do_comm_progress();
             }
@@ -634,7 +633,33 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
 
 static void ICACHE_FLASH_ATTR _mqttclient_on_publish(struct umqtt_connection *_m, char *topic, uint8_t *data, uint16_t len) {
 #if ENABLE_DEVICE_CLASS_REACTOR
+    uint8_t i;
+    char *_respond_topic;
+    char *_respond_data;
+    uint8_t _respond_topic_len;
+    uint8_t _respond_data_len;
+    uint8_t _respond_flags;
+
+    /* Process received data. */
     reactor_on_data(topic, data, len);
+
+    /* Respond to network. */
+    for (i = 0; i < reactor_respond_topics_count; i++) {
+        if (reactor_respond_is_updated(i)) {
+            _respond_topic = reactor_respond_get_topic(i, &_respond_topic_len);
+            _respond_data = reactor_respond_get_value(i, &_respond_data_len);
+            _respond_flags = reactor_respond_get_flags(i);
+            umqtt_publish(
+                &_mqttclient_mqtt,
+                _respond_topic,
+                (uint8_t *) _respond_data,
+                _respond_data_len,
+                _respond_flags);
+        }
+    }
+
+    reactor_respond_commit();
+    _mqttclient_send();
 #endif
 }
 

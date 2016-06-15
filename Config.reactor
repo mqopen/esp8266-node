@@ -114,4 +114,36 @@ config REACTOR_PINSTATE_GPIO_PIN
 	help
 	  Define GPIO in number which should be changed on data event.
 
+config REACTOR_PINSTATE_RESPOND
+	bool "Respond"
+	depends on REACTOR_PINSTATE
+	default y
+	help
+	  Reactor respond settings.
+
+if REACTOR_PINSTATE_RESPOND
+
+config REACTOR_PINSTATE_RESPOND_TOPIC
+	string "Respond MQTT topic"
+	depends on REACTOR_PINSTATE_RESPOND
+	default "pinstate"
+	help
+	  Pinstate respond MQTT topic.
+
+config REACTOR_PINSTATE_RESPOND_MESSAGE_ENABLE
+	string "Enable message"
+	depends on REACTOR_PINSTATE_RESPOND
+	default "enabled"
+	help
+	  Pinstate respond MQTT topic enable message.
+
+config REACTOR_PINSTATE_RESPOND_MESSAGE_DISABLE
+	string "Disable message"
+	depends on REACTOR_PINSTATE_RESPOND
+	default "disabled"
+	help
+	  Pinstate respond MQTT topic disable message.
+
+endif # REACTOR_PINSTATE_RESPOND
+
 endmenu
