@@ -74,7 +74,7 @@ static struct reactor_str _reactor_pinstate_respond_data[] = {
 /** Respond topic flags. */
 static uint8_t _reactor_pinstate_respond_flags[] = {
 #if ENABLE_REACTOR_PINSTATE_RESPOND
-    0,
+    _BV(UMQTT_OPT_RETAIN),
 #endif
 };
 
