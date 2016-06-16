@@ -97,6 +97,27 @@ const uint8_t reactor_respond_topics_count = 0;
 static bool _reactor_pinstate_cmp_keyword(const char *keyword, uint16_t keyword_len, const uint8_t *data, uint16_t data_len);
 #endif
 
+void reactor_init(void) {
+#if ENABLE_REACTOR_PINSTATE_RESPOND
+    bool _enabled;
+    uint8_t _len;
+#endif
+    pinstate_init();
+#if ENABLE_REACTOR_PINSTATE_RESPOND
+    _enabled = pinstate_get();
+    if (_enabled) {
+        _len = os_sprintf(
+            _reactor_pinstate_respond_data[0].data,
+            CONFIG_REACTOR_PINSTATE_RESPOND_MESSAGE_ENABLE);
+    } else {
+        _len = os_sprintf(
+            _reactor_pinstate_respond_data[0].data,
+            CONFIG_REACTOR_PINSTATE_RESPOND_MESSAGE_DISABLE);
+    }
+    _reactor_pinstate_respond_data[0].len = _len;
+#endif
+}
+
 void reactor_on_data(const char *topic, const uint8_t *data, uint16_t data_len) {
     bool _enabled = false;
 #if ENABLE_REACTOR_PINSTATE_RESPOND

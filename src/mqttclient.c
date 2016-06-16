@@ -35,17 +35,18 @@
 #include "mqttclient_data.h"
 #include "mqttclient.h"
 
-/*
- * Helper macro that defines whether MQTT client is configured to send some data
- * to broker when initializing a MQTT connection.
- *
- * This is commonly needed for asynchronous sensors. When device connects to the
- * network, it must send a sensor current state, if relevant.
- */
-#if ENABLE_DEVICE_CLASS_SENSOR && SENSOR_TYPE_ASYNCHRONOUS
-  #define MQTTCLIENT_PUBLISH_INITIAL_STATE     1
-#else
-  #define MQTTCLIENT_PUBLISH_INITIAL_STATE     0
+#if MQTTCLIENT_PUBLISH_INITIAL_STATE
+  #if ENABLE_DEVICE_CLASS_SENSOR
+    #define __mqttclient_initial_publish_count sensor_topics_count
+    #define __mqttclient_get_topic sensor_get_topic
+    #define __mqttclient_get_flags sensor_get_flags
+  #elif ENABLE_DEVICE_CLASS_REACTOR
+    #define __mqttclient_initial_publish_count reactor_respond_topics_count
+    #define __mqttclient_get_topic reactor_respond_get_topic
+    #define __mqttclient_get_flags reactor_respond_get_flags
+  #else
+    #error Unsupported device class with initial publish!
+  #endif
 #endif
 
 /** Timer for ending MQTT Keep Alive messages. */
@@ -275,6 +276,8 @@ static void _mqttclient_async_callback(uint8_t topic_index);
  * Publish initial data.
  */
 static void _mqttclient_initial_publish(void);
+
+static inline uint8_t _mqttclient_get_initial_value(uint8_t index, char **buf, uint8_t *buf_len);
 #endif
 
 /* Implementation. */
@@ -509,7 +512,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
 
         if (_mqttclient_comm_state == MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED) {
 #if MQTTCLIENT_PUBLISH_INITIAL_STATE
-            if (_mqttclient_initial_publish_index == sensor_topics_count) {
+            if (_mqttclient_initial_publish_index == __mqttclient_initial_publish_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_INIT_STATE_PUBLISHED;
                 _mqttclient_initial_publish_index = 0;
             }
@@ -618,7 +621,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
         _publish_sending = true;
 
         sensor_read();
-        for (_i = 0; _i < sensor_topics_count; _i++) {
+        for (_i = 0; _i < __mqttclient_initial_publish_count; _i++) {
             _topic = sensor_get_topic(_i, &_topic_len);
             _data = sensor_get_value(_i, &_data_len);
             _flags = sensor_get_flags(_i);
@@ -672,11 +675,11 @@ static void _mqttclient_initial_publish(void) {
     uint8_t _flags;
 
     /* Get sensor data until some data are relevant. */
-    while (!sensor_get_initial_value(_mqttclient_initial_publish_index, &_data, &_data_len)) {
+    while (!_mqttclient_get_initial_value(_mqttclient_initial_publish_index, &_data, &_data_len)) {
         _mqttclient_initial_publish_index++;
 
         /* Check if there are more topics. */
-        if (_mqttclient_initial_publish_index == sensor_topics_count) {
+        if (_mqttclient_initial_publish_index == __mqttclient_initial_publish_count) {
             return;
         }
     }
@@ -684,9 +687,20 @@ static void _mqttclient_initial_publish(void) {
     /* We have relevant data. */
     _mqttclient_initial_publish_blank = false;
 
-    _topic = sensor_get_topic(_mqttclient_initial_publish_index, &_topic_len);
-    _flags = sensor_get_flags(_mqttclient_initial_publish_index);
+    _topic = __mqttclient_get_topic(_mqttclient_initial_publish_index, &_topic_len);
+    _flags = __mqttclient_get_flags(_mqttclient_initial_publish_index);
     umqtt_publish(&_mqttclient_mqtt, _topic, (uint8_t *) _data, _data_len, _flags);
     _mqttclient_initial_publish_index++;
+}
+
+static inline uint8_t _mqttclient_get_initial_value(uint8_t index, char **buf, uint8_t *buf_len) {
+  #if ENABLE_DEVICE_CLASS_SENSOR
+    return sensor_get_initial_value(index, buf, buf_len);
+  #elif ENABLE_DEVICE_CLASS_REACTOR
+    *buf = reactor_respond_get_value(index, buf_len);
+    return 1;
+  #else
+    #error Unsupported implementation!
+  #endif
 }
 #endif

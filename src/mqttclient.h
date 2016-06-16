@@ -23,6 +23,21 @@
  * server, sending messages end receiving data.
  */
 
+/*
+ * Helper macro that defines whether MQTT client is configured to send some data
+ * to broker when initializing a MQTT connection.
+ *
+ * This is commonly needed for asynchronous sensors. When device connects to the
+ * network, it must send a sensor current state, if relevant.
+ */
+#if ENABLE_DEVICE_CLASS_SENSOR && SENSOR_TYPE_ASYNCHRONOUS
+  #define MQTTCLIENT_PUBLISH_INITIAL_STATE     1
+#elif ENABLE_DEVICE_CLASS_REACTOR && REACTOR_RESPOND
+  #define MQTTCLIENT_PUBLISH_INITIAL_STATE     1
+#else
+  #define MQTTCLIENT_PUBLISH_INITIAL_STATE     0
+#endif
+
 /**
  * MQTT client state.
  */
@@ -42,7 +57,7 @@ enum mqttclient_comm_state {
     MQTTCLIENT_COMM_CONNECTED,              /**< Messages CONNECT and CONNACK
                                                     exchanged successfully. */
     MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED,     /**< Initial PUBLISH messages sent. */
-#if ENABLE_DEVICE_CLASS_SENSOR && SENSOR_TYPE_ASYNCHRONOUS
+#if MQTTCLIENT_PUBLISH_INITIAL_STATE
     MQTTCLIENT_COMM_INIT_STATE_PUBLISHED,   /**< Initial sensor state published. */
 #endif
     MQTTCLIENT_COMM_SUBSCRIBED,             /**< Subscribed to MQTT topics. */
