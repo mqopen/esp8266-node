@@ -19,6 +19,7 @@
 #include <osapi.h>
 #include "common.h"
 #include "datautils.h"
+#include "umqtt.h"
 #include "reactor.h"
 #include "reactor_pinstate.h"
 
