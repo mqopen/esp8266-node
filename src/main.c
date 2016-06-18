@@ -26,7 +26,7 @@
   #include "sensor.h"
 #endif
 #if ENABLE_DEVICE_CLASS_REACTOR
-    #include "reactor.h"
+  #include "reactor.h"
 #endif
 #include "network.h"
 #include "mqttclient.h"
