@@ -504,9 +504,6 @@ static void ICACHE_FLASH_ATTR _mqttclient_update_comm_progress(void) {
             if (_mqttclient_init_seq_items_index == mqttclient_data_init_seq_items_count) {
                 _mqttclient_comm_state = MQTTCLIENT_COMM_INIT_SEQ_PUBLISHED;
                 _mqttclient_init_seq_items_index = 0;
-//#if MQTTCLIENT_PUBLISH_INITIAL_STATE
-//                sensor_notify_lock();
-//#endif
             }
         }
 
