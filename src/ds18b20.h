@@ -32,7 +32,7 @@
 
 enum ds18b20_io_result {
     DS18B20_IO_OK,                          /**< IO was OK. */
-    DS18B20_IO_ERROR,
+    DS18B20_IO_ERROR,                       /**< IO error. */
     DS18B20_IO_TEMP_CONVERSION_TIMEOUT,     /**< Temperature conversion timeouted. */
 };
 

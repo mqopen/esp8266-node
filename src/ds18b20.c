@@ -20,9 +20,14 @@
 #include "onewire.h"
 #include "ds18b20.h"
 
-/** For temperature conversion timeouting. Allow some more miliseconds than datasheet defines. */
+/**
+ * For temperature conversion timeouting. Allow some more miliseconds than datasheet defines.
+ */
 #define DS18B20_TEMP_CONVERSION_TIMEOUT_TOLERATION 10
 
+/**
+ * Sensor conversion timeout.
+ */
 #if ENABLE_SENSOR_DS18B20_TEMPRESOLUTION_9BIT
   #define DS18B20_TEMP_CONVERSION_TIMEOUT   (94 + DS18B20_TEMP_CONVERSION_TIMEOUT_TOLERATION)
 #elif ENABLE_SENSOR_DS18B20_TEMPRESOLUTION_10BIT
