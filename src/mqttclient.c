@@ -76,9 +76,14 @@ static struct espconn _mqttclient_espconn = {
 /** Current communication state. */
 static enum mqttclient_comm_state _mqttclient_comm_state = MQTTCLIENT_COMM_INIT;
 
+/** MQTT TX buffer. */
 static uint8_t _mqttclient_tx_buffer[200];
+
+/** MQTT RX buffer. */
 static uint8_t _mqttclient_rx_buffer[200];
-static uint8_t _rx_buf[200];
+
+/** Network transmission buffer. */
+static uint8_t _mqttclient_rx_buf[200];
 
 /**
  * Handle PUBLISH message from broker.
@@ -450,9 +455,9 @@ static void ICACHE_FLASH_ATTR _mqttclient_umqtt_keep_alive(void) {
 
 static void ICACHE_FLASH_ATTR _mqttclient_send(void) {
     if (!_message_sending) {
-        uint16_t len = umqtt_circ_pop(&_mqttclient_mqtt.txbuff, _rx_buf, sizeof(_rx_buf));
+        uint16_t len = umqtt_circ_pop(&_mqttclient_mqtt.txbuff, _mqttclient_rx_buf, sizeof(_mqttclient_rx_buf));
         if (len) {
-            espconn_send(&_mqttclient_espconn, _rx_buf, len);
+            espconn_send(&_mqttclient_espconn, _mqttclient_rx_buf, len);
             _message_sending = true;
             commsig_notify();
         }
