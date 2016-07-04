@@ -623,7 +623,7 @@ static void ICACHE_FLASH_ATTR _mqttclient_publish(void) {
         _publish_sending = true;
 
         sensor_read();
-        for (_i = 0; _i < __mqttclient_initial_publish_count; _i++) {
+        for (_i = 0; _i < sensor_topics_count; _i++) {
             _topic = sensor_get_topic(_i, &_topic_len);
             _data = sensor_get_value(_i, &_data_len);
             _flags = sensor_get_flags(_i);
